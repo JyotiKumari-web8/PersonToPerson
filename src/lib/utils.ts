@@ -166,7 +166,7 @@ export function getPublicBaseUrl(allowLocalFallback = true): string {
     }
   }
 
-  return configuredEnv ? configuredEnv.replace(/\/+$/, '') : 'https://yourdomain.com';
+  return configuredEnv ? configuredEnv.replace(/\/+$/, '') : 'https://person-to-person.vercel.app';
 }
 
 /**
@@ -187,7 +187,7 @@ export function isLocalEnvironment(): boolean {
 
 /**
  * Builds the single permanent public URL for a business slug.
- * Example: https://yourdomain.com/b/abc123 or http://localhost:5173/b/abc123
+ * Example: https://person-to-person.vercel.app/b/abc123 or http://localhost:5173/b/abc123
  */
 export function getPublicBusinessUrl(slug: string, customBaseUrl?: string): string {
   if (!slug) return '';

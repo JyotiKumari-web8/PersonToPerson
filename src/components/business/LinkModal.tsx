@@ -166,7 +166,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
               ? 'Enter your Stripe payment link, PayPal link, or gateway checkout URL.'
               : linkType === 'whatsapp'
               ? 'Enter international phone number with country code (e.g. +14155552671) or wa.me URL.'
-              : 'Include full web address (e.g. https://yourdomain.com).'
+              : 'Include full web address (e.g. https://example.com).'
           }
         />
 
