@@ -117,8 +117,8 @@ export const LinksManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dynamic Link Builder</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Dynamic Link Builder</h1>
+          <p className="text-xs text-[#94A3B8] mt-0.5">
             Add custom URLs, payment buttons, booking pages, reviews, or social links. Reorder anytime.
           </p>
         </div>
@@ -154,10 +154,10 @@ export const LinksManager: React.FC = () => {
       )}
 
       {/* Info Tip */}
-      <div className="p-3 bg-sky-50 rounded-xl border border-sky-100 flex items-start gap-2.5 text-xs text-sky-800">
-        <HelpCircle className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+      <div className="p-4 bg-[#14243A] rounded-2xl border border-[#20344D] flex items-start gap-3 text-xs text-[#CBD5E1] shadow-sm">
+        <HelpCircle className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Tip:</strong> You can add any URL you want (Stripe checkout, WhatsApp chat, Google review, appointment calendar, or custom domain). Use the up/down arrows to change the order your customers see them.
+          <strong className="font-bold text-[#F8FAFC]">Tip:</strong> You can add any URL you want (Stripe checkout, WhatsApp chat, Google review, appointment calendar, or custom domain). Use the up/down arrows to change the order your customers see them.
         </p>
       </div>
 
@@ -192,7 +192,7 @@ export const LinksManager: React.FC = () => {
               }
             />
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {links.map((link, idx) => (
                 <LinkItemRow
                   key={link.id}
@@ -221,3 +221,4 @@ export const LinksManager: React.FC = () => {
     </div>
   );
 };
+

@@ -100,10 +100,10 @@ export const BusinessProfile: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">
           {business ? 'Business Profile Settings' : 'Create Business Profile'}
         </h1>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[#94A3B8] mt-0.5">
           Manage your official business info. Updating your details will never break your permanent public URL.
         </p>
       </div>
@@ -117,21 +117,21 @@ export const BusinessProfile: React.FC = () => {
 
       {/* Permanent Slug Notice */}
       {slug && (
-        <div className="p-4 bg-sky-50 rounded-xl border border-sky-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-100 text-sky-700 rounded-lg shrink-0">
+        <div className="p-4.5 bg-[#0B1728] rounded-2xl border border-[#20344D] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 bg-[#14243A] text-[#38BDF8] border border-[#20344D] rounded-xl shrink-0">
               <Lock className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-sky-900">
+                <span className="text-xs font-bold text-[#F8FAFC] tracking-tight">
                   Locked Permanent Public URL
                 </span>
-                <span className="text-[10px] font-semibold bg-sky-200 text-sky-800 px-2 py-0.5 rounded-full">
-                  Permanent
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#14243A] text-[#38BDF8] border border-[#20344D] px-2 py-0.5 rounded-full">
+                  Immutable
                 </span>
               </div>
-              <p className="text-xs text-sky-700 font-mono mt-0.5">
+              <p className="text-xs text-[#38BDF8] font-mono mt-0.5 select-all font-semibold">
                 {publicUrl}
               </p>
             </div>
@@ -140,7 +140,7 @@ export const BusinessProfile: React.FC = () => {
             href={getInternalBusinessPath(slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:text-sky-800 bg-white border border-sky-300 rounded-lg hover:bg-sky-50 transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#CBD5E1] hover:text-[#38BDF8] bg-[#14243A] border border-[#20344D] rounded-xl hover:bg-[#101D30] shadow-sm transition-all shrink-0"
           >
             <span>View Public Page</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -159,11 +159,11 @@ export const BusinessProfile: React.FC = () => {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             {/* Business Name */}
             <Input
               label="Business Name"
-              placeholder="e.g. Lumina Artisan Bistro, City Dental Care"
+              placeholder="e.g. Acme Cafe, City Care Dental"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -189,27 +189,27 @@ export const BusinessProfile: React.FC = () => {
 
             {/* Short Description */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-1.5">
                 Short Description / Tagline
               </label>
               <textarea
                 rows={3}
-                className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                className="w-full rounded-xl border border-[#20344D] hover:border-[#38BDF8]/40 bg-[#14243A] px-3.5 py-2.5 text-sm text-[#F8FAFC] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#38BDF8]/20 focus:border-[#38BDF8] transition-all shadow-inner"
                 placeholder="Briefly describe what your business offers (shown on your customer profile page)..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={300}
               />
-              <p className="mt-1 text-[11px] text-slate-400">
+              <p className="mt-1 text-[11px] text-[#94A3B8]">
                 Maximum 300 characters. {300 - description.length} remaining.
               </p>
             </div>
 
             {/* Media URLs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#20344D]">
               <Input
                 label="Logo Image URL"
-                placeholder="https://example.com/logo.png"
+                placeholder="https://images.yourdomain.com/logo.png"
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
                 leftAddon={<Image className="w-4 h-4" />}
@@ -217,7 +217,7 @@ export const BusinessProfile: React.FC = () => {
               />
               <Input
                 label="Cover Banner Image URL (Optional)"
-                placeholder="https://example.com/cover.jpg"
+                placeholder="https://images.yourdomain.com/cover.jpg"
                 value={coverUrl}
                 onChange={(e) => setCoverUrl(e.target.value)}
                 leftAddon={<Image className="w-4 h-4" />}
@@ -226,14 +226,14 @@ export const BusinessProfile: React.FC = () => {
             </div>
 
             {/* Contact Information */}
-            <div className="pt-2 border-t border-slate-100">
-              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3">
+            <div className="pt-3 border-t border-[#20344D]">
+              <h4 className="text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-3">
                 Customer Direct Contact
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Direct Phone Number"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+1 234 567 8900"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   leftAddon={<Phone className="w-4 h-4" />}
@@ -253,7 +253,7 @@ export const BusinessProfile: React.FC = () => {
               <div className="mt-4">
                 <Input
                   label="Physical Address / Street"
-                  placeholder="123 Main Street, Suite 400"
+                  placeholder="Street address, Suite / Floor"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   leftAddon={<MapPin className="w-4 h-4" />}
@@ -278,3 +278,4 @@ export const BusinessProfile: React.FC = () => {
     </div>
   );
 };
+

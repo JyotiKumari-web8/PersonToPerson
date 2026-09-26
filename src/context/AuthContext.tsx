@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { UserProfile, Business } from '@/types';
+import { UserProfile, Business, UserRole } from '@/types';
 import { authService } from '@/services/authService';
 import { businessService } from '@/services/businessService';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -8,11 +8,12 @@ interface AuthContextType {
   user: UserProfile | null;
   business: Business | null;
   isAdmin: boolean;
+  isPlatformOwner: boolean;
   isLoading: boolean;
   refreshUser: () => Promise<void>;
   refreshBusiness: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, fullName: string, role?: 'business_owner' | 'admin') => Promise<void>;
+  signup: (email: string, password: string, fullName: string, role?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     fullName: string,
-    role: 'business_owner' | 'admin' = 'business_owner'
+    role: UserRole = 'business_owner'
   ) => {
     await authService.signUp(email, password, fullName, role);
     await loadUserData();
@@ -97,7 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBusiness(null);
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isPlatformOwner = user?.role === 'platform_owner' || user?.role === 'admin';
+  const isAdmin = isPlatformOwner;
 
   return (
     <AuthContext.Provider
@@ -105,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         business,
         isAdmin,
+        isPlatformOwner,
         isLoading,
         refreshUser,
         refreshBusiness,

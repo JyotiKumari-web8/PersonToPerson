@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/common/Card';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { CardContent, CardFooter } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Alert } from '@/components/common/Alert';
-import { Link as LinkIcon, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
@@ -41,78 +42,65 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-        <Link to="/" className="inline-flex items-center gap-2 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold shadow-xs">
-            <LinkIcon className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-slate-900 text-lg tracking-tight">PersonToPerson</span>
-        </Link>
-        <h2 className="text-xl font-bold text-slate-900">Sign in to your dashboard</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Manage your permanent business URL, active links, and analytics.
-        </p>
-      </div>
+    <AuthLayout
+      title="Sign in to your account"
+      subtitle="Manage your permanent business URL, active links, and analytics."
+      activeTab="login"
+    >
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4 pt-6 p-6 sm:p-7">
+          {error && <Alert type="error" message={error} />}
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <Card className="shadow-sm">
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4 pt-6">
-              {error && <Alert type="error" message={error} />}
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="name@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            leftAddon={<Mail className="w-4 h-4 text-[#94A3B8]" />}
+          />
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="name@business.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                leftAddon={<Mail className="w-4 h-4" />}
-              />
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  leftAddon={<Lock className="w-4 h-4" />}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full mt-2"
-                isLoading={isLoading}
-                icon={<ArrowRight className="w-4 h-4" />}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-[#38BDF8] hover:underline"
               >
-                Sign In
-              </Button>
-            </CardContent>
-
-            <CardFooter className="justify-center text-xs text-slate-500 py-4 bg-slate-50/50">
-              Don't have an account?{' '}
-              <Link to="/signup" className="ml-1 font-semibold text-sky-600 hover:text-sky-700 hover:underline">
-                Create an account
+                Forgot password?
               </Link>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
-    </div>
+            </div>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full mt-2 font-bold py-3 text-sm shadow-xs"
+            isLoading={isLoading}
+            icon={<ArrowRight className="w-4 h-4" />}
+          >
+            Sign In
+          </Button>
+        </CardContent>
+
+        <CardFooter className="justify-center text-xs text-[#94A3B8] py-4 bg-[#0B1728] border-t border-[#20344D]">
+          Don't have an account?{' '}
+          <Link to="/signup" className="ml-1.5 font-bold text-[#38BDF8] hover:underline">
+            Create an account
+          </Link>
+        </CardFooter>
+      </form>
+    </AuthLayout>
   );
 };

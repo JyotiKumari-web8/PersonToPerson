@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT,
     full_name TEXT,
-    role TEXT NOT NULL DEFAULT 'business_owner' CHECK (role IN ('business_owner', 'admin')),
+    role TEXT NOT NULL DEFAULT 'business_owner' CHECK (role IN ('business_owner', 'platform_owner', 'admin')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -86,11 +86,16 @@ CREATE TABLE IF NOT EXISTS public.business_sponsors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
     sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
+    placement TEXT NOT NULL DEFAULT 'both' CHECK (placement IN ('header', 'footer', 'both')),
     display_order INTEGER NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(business_id, sponsor_id)
 );
+
+ALTER TABLE public.business_sponsors
+ADD COLUMN IF NOT EXISTS placement TEXT NOT NULL DEFAULT 'both'
+CHECK (placement IN ('header', 'footer', 'both'));
 
 CREATE INDEX IF NOT EXISTS idx_business_sponsors_business_id ON public.business_sponsors(business_id);
 
@@ -121,7 +126,7 @@ BEGIN
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-        COALESCE(NEW.raw_user_meta_data->>'role', 'business_owner')
+        'business_owner'
     );
     RETURN NEW;
 END;
@@ -143,13 +148,23 @@ ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.business_sponsors ENABLE ROW LEVEL SECURITY;
 
--- Helper function to check if current user is admin
+-- Helper function to check if current user is platform owner / admin
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM public.profiles
-        WHERE id = auth.uid() AND role = 'admin'
+        WHERE id = auth.uid() AND (role = 'platform_owner' OR role = 'admin')
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.is_platform_owner()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND (role = 'platform_owner' OR role = 'admin')
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -308,3 +323,48 @@ CREATE POLICY "Owners can view own business sponsors"
 CREATE POLICY "Admins manage business_sponsors"
     ON public.business_sponsors FOR ALL
     USING (public.is_admin());
+
+-- ==============================================================================
+-- ROLE ESCALATION PREVENTION
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.prevent_profile_role_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.role IS DISTINCT FROM OLD.role THEN
+        IF NOT public.is_admin() THEN
+            NEW.role := OLD.role;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_prevent_role_escalation ON public.profiles;
+CREATE TRIGGER trg_prevent_role_escalation
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE PROCEDURE public.prevent_profile_role_escalation();
+
+-- ==============================================================================
+-- PUBLIC BUSINESS STATUS LOOKUP RPC (MINIMAL & SAFE)
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.get_public_business_status(p_slug TEXT)
+RETURNS TABLE (
+    id UUID,
+    slug TEXT,
+    name TEXT,
+    is_active BOOLEAN
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT b.id, b.slug, b.name, b.is_active
+    FROM public.businesses b
+    WHERE b.slug = lower(trim(p_slug))
+    LIMIT 1;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_public_business_status(TEXT) TO anon, authenticated;

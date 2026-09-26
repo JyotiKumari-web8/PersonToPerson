@@ -17,32 +17,39 @@ export const Alert: React.FC<AlertProps> = ({
 }) => {
   const styles = {
     info: {
-      container: 'bg-sky-50 border-sky-200 text-sky-800',
-      icon: <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />,
+      container: 'bg-[#101D30] border-[#20344D] text-[#CBD5E1]',
+      iconBg: 'bg-[#14243A] text-[#38BDF8] border border-[#20344D]',
+      icon: <Info className="w-4 h-4 shrink-0" />,
     },
     success: {
-      container: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-      icon: <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />,
+      container: 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200',
+      iconBg: 'bg-emerald-950/60 text-[#22C55E] border border-emerald-800/60',
+      icon: <CheckCircle2 className="w-4 h-4 shrink-0" />,
     },
     warning: {
-      container: 'bg-amber-50 border-amber-200 text-amber-800',
-      icon: <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />,
+      container: 'bg-amber-950/30 border-amber-800/50 text-amber-200',
+      iconBg: 'bg-amber-950/60 text-amber-400 border border-amber-800/60',
+      icon: <AlertTriangle className="w-4 h-4 shrink-0" />,
     },
     error: {
-      container: 'bg-rose-50 border-rose-200 text-rose-800',
-      icon: <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />,
+      container: 'bg-rose-950/30 border-rose-800/50 text-rose-200',
+      iconBg: 'bg-rose-950/60 text-[#EF4444] border border-rose-800/60',
+      icon: <AlertCircle className="w-4 h-4 shrink-0" />,
     },
   };
 
-  const { container, icon } = styles[type];
+  const { container, iconBg, icon } = styles[type];
 
   return (
-    <div className={cn('flex items-start gap-3 rounded-lg border p-3.5 text-xs', container, className)}>
-      {icon}
-      <div className="flex-1">
-        {title && <h4 className="font-semibold mb-0.5">{title}</h4>}
+    <div className={cn('flex items-start gap-3 rounded-xl border p-3.5 sm:p-4 text-xs shadow-xs leading-relaxed', container, className)}>
+      <div className={cn('p-1 rounded-lg shrink-0 mt-0.5', iconBg)}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        {title && <h4 className="font-bold text-[#F8FAFC] mb-0.5 tracking-tight">{title}</h4>}
         <div className="leading-relaxed opacity-95">{message}</div>
       </div>
     </div>
   );
 };
+

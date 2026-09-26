@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/common/Ca
 import { Button } from '@/components/common/Button';
 import { QRCodeCard } from '@/components/business/QRCodeCard';
 import { LINK_TYPE_CONFIG } from '@/components/business/linkIcons';
-import { getPublicBusinessUrl, getInternalBusinessPath } from '@/lib/utils';
+import { getInternalBusinessPath } from '@/lib/utils';
 import {
   Users,
   MousePointerClick,
@@ -54,14 +54,16 @@ export const Overview: React.FC = () => {
 
   if (!business) {
     return (
-      <div className="text-center py-16">
-        <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-slate-800">No Business Profile Found</h3>
-        <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-          Please set up your business profile first to generate your permanent URL.
+      <div className="text-center py-20 bg-[#101D30] rounded-2xl border border-[#20344D] shadow-lg p-8 max-w-lg mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-amber-950/40 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-800/60">
+          <Building2 className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-[#F8FAFC] tracking-tight">No Business Profile Found</h3>
+        <p className="text-xs text-[#94A3B8] max-w-sm mx-auto mt-1 mb-5 leading-relaxed">
+          Please set up your business profile first to generate your permanent URL and customer page.
         </p>
         <Link to="/dashboard/profile">
-          <Button variant="primary">Create Business Profile</Button>
+          <Button variant="primary" size="md">Create Business Profile</Button>
         </Link>
       </div>
     );
@@ -78,10 +80,10 @@ export const Overview: React.FC = () => {
       {/* Welcome & Quick Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">
             Welcome back, {business.name}
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[#94A3B8] mt-0.5">
             Here is a live summary of your permanent business profile and link performance.
           </p>
         </div>
@@ -106,48 +108,48 @@ export const Overview: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm hover:border-[#38BDF8]/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Profile Visits</span>
-            <span className="p-1.5 rounded-lg bg-sky-50 text-sky-600">
+            <span className="text-xs font-semibold text-[#94A3B8] tracking-tight">Profile Visits</span>
+            <span className="p-2 rounded-xl bg-[#14243A] text-[#38BDF8] border border-[#20344D]">
               <Users className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900">{summary.totalVisits}</div>
-          <span className="text-[11px] text-slate-400">Past 7 days</span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#F8FAFC] tracking-tight">{summary.totalVisits}</div>
+          <span className="text-[11px] text-[#94A3B8] font-medium">Past 7 days</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm hover:border-[#38BDF8]/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Link Clicks</span>
-            <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+            <span className="text-xs font-semibold text-[#94A3B8] tracking-tight">Link Clicks</span>
+            <span className="p-2 rounded-xl bg-emerald-950/50 text-[#22C55E] border border-emerald-800/60">
               <MousePointerClick className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900">{summary.totalClicks}</div>
-          <span className="text-[11px] text-slate-400">Total customer clicks</span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#F8FAFC] tracking-tight">{summary.totalClicks}</div>
+          <span className="text-[11px] text-[#94A3B8] font-medium">Total customer clicks</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm hover:border-[#38BDF8]/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Active Links</span>
-            <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
+            <span className="text-xs font-semibold text-[#94A3B8] tracking-tight">Active Links</span>
+            <span className="p-2 rounded-xl bg-[#14243A] text-[#38BDF8] border border-[#20344D]">
               <Link2 className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900">{activeLinksCount}</div>
-          <span className="text-[11px] text-slate-400">of {links.length} total links</span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#F8FAFC] tracking-tight">{activeLinksCount}</div>
+          <span className="text-[11px] text-[#94A3B8] font-medium">of {links.length} total links</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm hover:border-[#38BDF8]/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Click Rate</span>
-            <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+            <span className="text-xs font-semibold text-[#94A3B8] tracking-tight">Click Rate</span>
+            <span className="p-2 rounded-xl bg-[#14243A] text-[#38BDF8] border border-[#20344D]">
               <TrendingUp className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900">{ctr}%</div>
-          <span className="text-[11px] text-slate-400">Interaction ratio</span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#F8FAFC] tracking-tight">{ctr}%</div>
+          <span className="text-[11px] text-[#94A3B8] font-medium">Interaction ratio</span>
         </div>
       </div>
 
@@ -159,7 +161,7 @@ export const Overview: React.FC = () => {
             <CardHeader>
               <div>
                 <CardTitle>Top Performing Links</CardTitle>
-                <p className="text-xs text-slate-500">Links with the highest customer interactions</p>
+                <p className="text-xs text-[#94A3B8] mt-0.5">Links with the highest customer interactions</p>
               </div>
               <Link to="/dashboard/links">
                 <Button variant="ghost" size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />}>
@@ -169,8 +171,8 @@ export const Overview: React.FC = () => {
             </CardHeader>
             <CardContent>
               {links.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-xs text-slate-500 mb-3">
+                <div className="py-10 text-center">
+                  <p className="text-xs text-[#94A3B8] mb-3.5 leading-relaxed">
                     No links added yet. Add your first link to make your profile useful for customers.
                   </p>
                   <Link to="/dashboard/links">
@@ -189,17 +191,17 @@ export const Overview: React.FC = () => {
                     return (
                       <div
                         key={link.id}
-                        className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/40"
+                        className="flex items-center justify-between p-3.5 rounded-xl border border-[#20344D] hover:border-[#38BDF8]/50 transition-all bg-[#0B1728] hover:bg-[#14243A] shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0 pr-3">
-                          <div className={`p-2 rounded-lg border ${cfg.badgeBg} shrink-0`}>
+                          <div className={`p-2.5 rounded-xl border ${cfg.badgeBg} shrink-0 shadow-xs`}>
                             {cfg.icon({ className: 'w-4 h-4' })}
                           </div>
                           <div className="min-w-0">
-                            <span className="block text-xs font-semibold text-slate-900 truncate">
+                            <span className="block text-xs font-bold text-[#F8FAFC] truncate tracking-tight">
                               {link.label}
                             </span>
-                            <span className="text-[11px] text-slate-400 font-mono truncate block max-w-xs sm:max-w-sm">
+                            <span className="text-[11px] text-[#94A3B8] font-mono truncate block max-w-xs sm:max-w-sm mt-0.5">
                               {link.url}
                             </span>
                           </div>
@@ -207,10 +209,10 @@ export const Overview: React.FC = () => {
 
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right">
-                            <span className="block text-xs font-bold text-slate-800">
+                            <span className="block text-xs font-bold text-[#F8FAFC]">
                               {clicks} {clicks === 1 ? 'click' : 'clicks'}
                             </span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] font-semibold text-[#94A3B8]">
                               {link.is_active ? 'Active' : 'Hidden'}
                             </span>
                           </div>
@@ -218,7 +220,7 @@ export const Overview: React.FC = () => {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 text-slate-400 hover:text-sky-600 rounded-md hover:bg-white transition-colors"
+                            className="p-1.5 text-[#94A3B8] hover:text-[#38BDF8] rounded-lg hover:bg-[#14243A] transition-colors"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -240,3 +242,4 @@ export const Overview: React.FC = () => {
     </div>
   );
 };
+

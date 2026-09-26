@@ -10,7 +10,6 @@ import { KeyRound, User, Mail, ShieldCheck } from 'lucide-react';
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
 
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
@@ -34,7 +33,6 @@ export const SettingsPage: React.FC = () => {
       setIsUpdatingPassword(true);
       await authService.updatePassword(newPassword);
       setPasswordStatus({ type: 'success', text: 'Password updated successfully!' });
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: unknown) {
@@ -50,8 +48,8 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Account Settings</h1>
-        <p className="text-xs text-slate-500">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Account Settings</h1>
+        <p className="text-xs text-[#94A3B8] mt-0.5">
           Manage your account credentials, security preferences, and authentication details.
         </p>
       </div>
@@ -75,17 +73,17 @@ export const SettingsPage: React.FC = () => {
             />
             <Input
               label="Full Name"
-              value={user?.full_name || 'Business Owner'}
+              value={user?.full_name || 'Not provided'}
               disabled
               leftAddon={<User className="w-4 h-4" />}
             />
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="text-slate-600">
+          <div className="flex items-center gap-2.5 p-3.5 bg-[#0B1728] rounded-xl border border-[#20344D] text-xs shadow-xs">
+            <ShieldCheck className="w-4 h-4 text-[#22C55E] shrink-0" />
+            <span className="text-[#94A3B8] font-medium">
               Account Role:{' '}
-              <strong className="text-slate-800 capitalize">
+              <strong className="text-[#F8FAFC] capitalize font-bold">
                 {user?.role?.replace('_', ' ') || 'Business Owner'}
               </strong>
             </span>
@@ -145,3 +143,4 @@ export const SettingsPage: React.FC = () => {
     </div>
   );
 };
+

@@ -6,8 +6,9 @@ import { AnalyticsChart } from '@/components/business/AnalyticsChart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
 import { getInternalBusinessPath } from '@/lib/utils';
-import { BarChart3, ExternalLink } from 'lucide-react';
+import { BarChart3, ExternalLink, Building2 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { Link } from 'react-router-dom';
 
 export const AnalyticsPage: React.FC = () => {
   const { business } = useAuth();
@@ -33,8 +34,17 @@ export const AnalyticsPage: React.FC = () => {
 
   if (!business) {
     return (
-      <div className="py-12 text-center text-slate-500">
-        Please set up your business profile to view your analytics.
+      <div className="text-center py-20 bg-[#101D30] rounded-2xl border border-[#20344D] shadow-lg p-8 max-w-lg mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-amber-950/40 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-800/60">
+          <Building2 className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-[#F8FAFC] tracking-tight">No Business Profile Found</h3>
+        <p className="text-xs text-[#94A3B8] max-w-sm mx-auto mt-1 mb-5 leading-relaxed">
+          Please set up your business profile to view your real analytics.
+        </p>
+        <Link to="/dashboard/profile">
+          <Button variant="primary" size="md">Create Business Profile</Button>
+        </Link>
       </div>
     );
   }
@@ -45,9 +55,9 @@ export const AnalyticsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Real Traffic & Analytics</h1>
-          <p className="text-xs text-slate-500">
-            Real recorded interactions without fake numbers. Track page visits and specific link conversions.
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Traffic & Analytics</h1>
+          <p className="text-xs text-[#94A3B8] mt-0.5">
+            Recorded interactions for your business. Track page visits and specific link clicks.
           </p>
         </div>
 
@@ -63,7 +73,7 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <LoadingSpinner label="Compiling real analytics data..." />
+        <LoadingSpinner label="Compiling analytics data..." />
       ) : !hasActivity ? (
         <div className="space-y-6">
           <EmptyState
@@ -102,3 +112,4 @@ export const AnalyticsPage: React.FC = () => {
     </div>
   );
 };
+

@@ -16,14 +16,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor={inputId} className="block text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-1.5">
             {label}
-            {props.required && <span className="text-rose-500 ml-1">*</span>}
+            {props.required && <span className="text-[#EF4444] ml-1 font-bold">*</span>}
           </label>
         )}
-        <div className="relative flex items-center rounded-lg shadow-xs">
+        <div className="relative flex items-center rounded-xl shadow-2xs">
           {leftAddon && (
-            <div className="absolute left-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-[#94A3B8]">
               {leftAddon}
             </div>
           )}
@@ -31,27 +31,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              'w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500',
-              leftAddon ? 'pl-9' : '',
-              rightAddon ? 'pr-9' : '',
+              'w-full rounded-xl border bg-[#14243A] px-3.5 py-2.5 text-sm text-[#F8FAFC] placeholder:text-[#94A3B8]/60 transition-all duration-150',
+              'focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/25 focus:border-[#0EA5E9]',
+              leftAddon ? 'pl-10' : '',
+              rightAddon ? 'pr-10' : '',
               error
-                ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200'
-                : 'border-slate-300 hover:border-slate-400',
+                ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20 text-[#EF4444]'
+                : 'border-[#20344D] hover:border-[#38BDF8]/40',
               className
             )}
             {...props}
           />
           {rightAddon && (
-            <div className="absolute right-3 flex items-center text-slate-400">
+            <div className="absolute right-3.5 flex items-center text-[#94A3B8]">
               {rightAddon}
             </div>
           )}
         </div>
         {error ? (
-          <p className="mt-1 text-xs text-rose-500 font-medium">{error}</p>
+          <p className="mt-1.5 text-xs text-[#EF4444] font-medium flex items-center gap-1">
+            <span>•</span> {error}
+          </p>
         ) : helperText ? (
-          <p className="mt-1 text-xs text-slate-500">{helperText}</p>
+          <p className="mt-1.5 text-xs text-[#94A3B8] leading-normal">{helperText}</p>
         ) : null}
       </div>
     );
@@ -59,3 +61,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+

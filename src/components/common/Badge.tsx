@@ -14,22 +14,22 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const variants = {
-    primary: 'bg-sky-50 text-sky-700 border-sky-200',
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    neutral: 'bg-slate-100 text-slate-700 border-slate-200',
+    primary: 'bg-[#14243A] text-[#38BDF8] border-[#20344D]',
+    success: 'bg-emerald-950/40 text-[#22C55E] border-emerald-800/50',
+    warning: 'bg-amber-950/40 text-amber-300 border-amber-800/50',
+    danger: 'bg-rose-950/40 text-[#EF4444] border-rose-800/50',
+    neutral: 'bg-[#14243A] text-[#CBD5E1] border-[#20344D]',
   };
 
   const sizes = {
-    sm: 'text-[11px] px-2 py-0.5',
-    md: 'text-xs px-2.5 py-1',
+    sm: 'text-[11px] px-2 py-0.5 font-semibold',
+    md: 'text-xs px-2.5 py-1 font-semibold',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 font-medium rounded-full border',
+        'inline-flex items-center gap-1.5 rounded-full border tracking-tight',
         variants[variant],
         sizes[size],
         className
@@ -40,3 +40,4 @@ export const Badge: React.FC<BadgeProps> = ({
     </span>
   );
 };
+

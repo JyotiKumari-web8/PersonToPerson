@@ -15,14 +15,15 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   const sizes = {
     sm: 'w-4 h-4',
-    md: 'w-7 h-7',
-    lg: 'w-10 h-10',
+    md: 'w-6 h-6',
+    lg: 'w-9 h-9',
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3 p-6 text-slate-500', className)}>
-      <Loader2 className={cn('animate-spin text-sky-600', sizes[size])} />
-      {label && <p className="text-xs font-medium text-slate-500">{label}</p>}
+    <div className={cn('flex flex-col items-center justify-center gap-3 p-8 text-[#94A3B8]', className)}>
+      <Loader2 className={cn('animate-spin text-[#0EA5E9]', sizes[size])} />
+      {label && <p className="text-xs font-semibold text-[#CBD5E1] tracking-tight">{label}</p>}
     </div>
   );
 };
+

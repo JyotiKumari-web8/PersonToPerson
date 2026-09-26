@@ -77,7 +77,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setError(
         linkType === 'whatsapp'
           ? 'Please enter a valid phone number (with country code) or a wa.me URL.'
-          : 'Please enter a valid URL (e.g. https://example.com).'
+          : 'Please enter a valid URL (e.g. https://yourbusiness.com).'
       );
       return;
     }
@@ -108,17 +108,17 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       description="Configure any destination link. It will update on your public page immediately."
       maxWidth="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="flex items-center gap-2 p-3 text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-lg">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="flex items-center gap-2 p-3 text-xs bg-rose-950/40 text-rose-300 border border-rose-800/60 rounded-xl leading-relaxed">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
         {/* Link Type Selector */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label className="block text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-2">
             Link Category
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -130,10 +130,10 @@ export const LinkModal: React.FC<LinkModalProps> = ({
                   key={type}
                   type="button"
                   onClick={() => handleTypeChange(type)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-sky-500 bg-sky-50 text-sky-800 ring-2 ring-sky-200 shadow-xs'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'border-[#38BDF8] bg-[#14243A] text-[#F8FAFC] ring-2 ring-[#38BDF8]/20 shadow-xs font-bold'
+                      : 'border-[#20344D] bg-[#0B1728] text-[#CBD5E1] hover:border-[#38BDF8]/40 hover:bg-[#14243A] font-medium'
                   }`}
                 >
                   <span className={cfg.colorClass}>{cfg.icon({ className: 'w-4 h-4' })}</span>
@@ -165,16 +165,16 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             linkType === 'payment'
               ? 'Enter your Stripe payment link, PayPal link, or gateway checkout URL.'
               : linkType === 'whatsapp'
-              ? 'Enter international phone number with country code (e.g. +14155552671) or wa.me URL.'
-              : 'Include full web address (e.g. https://example.com).'
+              ? 'Enter international phone number with country code (e.g. +14159876543) or wa.me URL.'
+              : 'Include full web address (e.g. https://yourbusiness.com).'
           }
         />
 
         {/* Active Toggle */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between pt-3 border-t border-[#20344D]">
           <div>
-            <label className="text-xs font-semibold text-slate-700 block">Link Status</label>
-            <p className="text-[11px] text-slate-500">
+            <label className="text-xs font-bold text-[#F8FAFC] block">Link Status</label>
+            <p className="text-[11px] text-[#94A3B8]">
               {isActive ? 'Visible on your public profile' : 'Hidden from customers'}
             </p>
           </div>
@@ -183,12 +183,12 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             role="switch"
             aria-checked={isActive}
             onClick={() => setIsActive(!isActive)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
-              isActive ? 'bg-sky-600' : 'bg-slate-300'
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#38BDF8]/30 ${
+              isActive ? 'bg-[#0EA5E9]' : 'bg-[#14243A] border border-[#20344D]'
             }`}
           >
             <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
                 isActive ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
@@ -196,7 +196,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#20344D]">
           <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
@@ -208,3 +208,4 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     </Modal>
   );
 };
+

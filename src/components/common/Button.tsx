@@ -19,20 +19,26 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer';
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer tracking-tight';
 
   const variants = {
-    primary: 'bg-sky-600 hover:bg-sky-700 text-white shadow-sm focus:ring-sky-500 active:scale-[0.99]',
-    secondary: 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 focus:ring-sky-400 active:scale-[0.99]',
-    outline: 'border border-slate-300 hover:bg-slate-100 text-slate-700 focus:ring-slate-400 active:scale-[0.99]',
-    ghost: 'hover:bg-slate-100 text-slate-700 focus:ring-slate-400',
-    danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm focus:ring-rose-500 active:scale-[0.99]',
+    primary:
+      'bg-[#0EA5E9] hover:bg-[#0284C7] text-white shadow-[0_2px_12px_-2px_rgba(14,165,233,0.4)] border border-[#0EA5E9] focus-visible:ring-2 focus-visible:ring-[#38BDF8]/40 active:scale-[0.985]',
+    secondary:
+      'bg-[#14243A] hover:bg-[#1A2E4A] text-[#F8FAFC] border border-[#20344D] hover:border-[#38BDF8]/40 focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30 active:scale-[0.985]',
+    outline:
+      'bg-[#101D30] hover:bg-[#14243A] text-[#F8FAFC] border border-[#20344D] hover:border-[#0EA5E9]/60 shadow-2xs hover:shadow-xs focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30 active:scale-[0.985]',
+    ghost:
+      'hover:bg-[#14243A] text-[#CBD5E1] hover:text-[#F8FAFC] focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30 active:scale-[0.985]',
+    danger:
+      'bg-[#EF4444] hover:bg-[#DC2626] text-white shadow-xs hover:shadow-sm border border-[#EF4444] focus-visible:ring-2 focus-visible:ring-[#EF4444]/30 active:scale-[0.985]',
   };
 
   const sizes = {
-    sm: 'text-xs px-2.5 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2 gap-2',
-    lg: 'text-base px-5 py-2.5 gap-2.5',
+    sm: 'text-xs px-3 py-1.5 gap-1.5 rounded-lg',
+    md: 'text-sm px-4 py-2 gap-2 rounded-xl',
+    lg: 'text-base px-5 py-2.5 gap-2.5 rounded-xl font-semibold',
   };
 
   return (
@@ -42,11 +48,12 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin text-current" />
+        <Loader2 className="w-4 h-4 animate-spin text-current shrink-0" />
       ) : icon ? (
-        <span className="shrink-0">{icon}</span>
+        <span className="shrink-0 inline-flex items-center">{icon}</span>
       ) : null}
-      {children}
+      <span>{children}</span>
     </button>
   );
 };
+

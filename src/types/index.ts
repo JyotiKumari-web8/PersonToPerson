@@ -1,4 +1,4 @@
-export type UserRole = 'business_owner' | 'admin';
+export type UserRole = 'business_owner' | 'platform_owner' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -6,6 +6,13 @@ export interface UserProfile {
   full_name?: string;
   role: UserRole;
   created_at?: string;
+}
+
+export interface PublicBusinessStatus {
+  id: string;
+  slug: string;
+  name: string;
+  is_active: boolean;
 }
 
 export interface Business {
@@ -24,6 +31,15 @@ export interface Business {
   is_active: boolean;
   created_at: string;
   updated_at?: string;
+
+  // Platform Owner inspection fields
+  owner_email?: string;
+  owner_name?: string;
+
+  // Future-ready architectural fields for subscription/trial tiers (Requirement 4)
+  subscription_status?: 'trialing' | 'active' | 'past_due' | 'canceled' | 'lifetime';
+  trial_ends_at?: string | null;
+  subscription_tier?: 'free' | 'starter' | 'pro' | 'enterprise';
 }
 
 export type LinkType =
@@ -79,14 +95,18 @@ export interface Sponsor {
   updated_at?: string;
 }
 
+export type SponsorPlacement = 'header' | 'footer' | 'both';
+
 export interface BusinessSponsor {
   id: string;
   business_id: string;
   sponsor_id: string;
+  placement?: SponsorPlacement;
   display_order: number;
   is_active: boolean;
   created_at: string;
   sponsor?: Sponsor;
+  business?: { id: string; name: string; slug: string };
 }
 
 export interface AnalyticsFilter {

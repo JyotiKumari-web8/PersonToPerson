@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { UserProfile } from '@/types';
+import { UserProfile, UserRole } from '@/types';
 import { localStore } from './store';
 
 export const authService = {
@@ -30,7 +30,7 @@ export const authService = {
           id: user.id,
           email: user.email || '',
           full_name: (user.user_metadata?.full_name as string) || '',
-          role: (user.user_metadata?.role as 'business_owner' | 'admin') || 'business_owner',
+          role: (user.user_metadata?.role as UserRole) || 'business_owner',
         };
       }
 
@@ -40,7 +40,7 @@ export const authService = {
     return localStore.getCurrentUser();
   },
 
-  async signUp(email: string, password: string, fullName: string, role: 'business_owner' | 'admin' = 'business_owner') {
+  async signUp(email: string, password: string, fullName: string, role: UserRole = 'business_owner') {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.auth.signUp({
         email,

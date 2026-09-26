@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authService } from '@/services/authService';
-import { Card, CardContent, CardFooter } from '@/components/common/Card';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { CardContent, CardFooter } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Alert } from '@/components/common/Alert';
-import { Link as LinkIcon, Mail, ArrowLeft, Send } from 'lucide-react';
+import { Mail, ArrowLeft, Send } from 'lucide-react';
 
 export const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -35,74 +36,62 @@ export const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-        <Link to="/" className="inline-flex items-center gap-2 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold shadow-xs">
-            <LinkIcon className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-slate-900 text-lg tracking-tight">PersonToPerson</span>
-        </Link>
-        <h2 className="text-xl font-bold text-slate-900">Reset your password</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          We will send password reset instructions to your email address.
-        </p>
-      </div>
+    <AuthLayout
+      title="Reset your password"
+      subtitle="We will send password reset instructions to your registered email address."
+      activeTab="forgot"
+    >
+      {success ? (
+        <CardContent className="pt-6 p-6 sm:p-7 text-center space-y-4">
+          <Alert
+            type="success"
+            title="Email Sent"
+            message={`If an account exists for ${email}, a password reset link has been dispatched. Please check your inbox and spam folder.`}
+          />
+          <Link to="/login">
+            <Button variant="primary" className="w-full mt-4 font-bold py-3 text-sm shadow-xs">
+              Back to Login
+            </Button>
+          </Link>
+        </CardContent>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4 pt-6 p-6 sm:p-7">
+            {error && <Alert type="error" message={error} />}
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <Card className="shadow-sm">
-          {success ? (
-            <CardContent className="pt-6 text-center space-y-4">
-              <Alert
-                type="success"
-                title="Email Sent"
-                message={`If an account exists for ${email}, a password reset link has been dispatched. Please check your inbox and spam folder.`}
-              />
-              <Link to="/login">
-                <Button variant="primary" className="w-full mt-4">
-                  Back to Login
-                </Button>
-              </Link>
-            </CardContent>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4 pt-6">
-                {error && <Alert type="error" message={error} />}
+            <Input
+              label="Registered Email Address"
+              type="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              leftAddon={<Mail className="w-4 h-4 text-[#94A3B8]" />}
+            />
 
-                <Input
-                  label="Registered Email Address"
-                  type="email"
-                  placeholder="name@business.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  leftAddon={<Mail className="w-4 h-4" />}
-                />
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full mt-2 font-bold py-3 text-sm shadow-xs"
+              isLoading={isLoading}
+              icon={<Send className="w-4 h-4" />}
+            >
+              Send Reset Link
+            </Button>
+          </CardContent>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full mt-2"
-                  isLoading={isLoading}
-                  icon={<Send className="w-4 h-4" />}
-                >
-                  Send Reset Link
-                </Button>
-              </CardContent>
-
-              <CardFooter className="justify-center text-xs text-slate-500 py-4 bg-slate-50/50">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-1 font-semibold text-sky-600 hover:text-sky-700 hover:underline"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to login</span>
-                </Link>
-              </CardFooter>
-            </form>
-          )}
-        </Card>
-      </div>
-    </div>
+          <CardFooter className="justify-center text-xs text-[#94A3B8] py-4 bg-[#0B1728] border-t border-[#20344D]">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1 font-bold text-[#38BDF8] hover:underline"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to login</span>
+            </Link>
+          </CardFooter>
+        </form>
+      )}
+    </AuthLayout>
   );
 };
+
