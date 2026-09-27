@@ -26,6 +26,32 @@ interface PublicProfileViewProps {
   onSponsorClick: (sponsorId: string, url: string) => void;
 }
 
+// Dynamic responsive column span calculation based on total active link count
+const getTileColSpan = (index: number, totalCount: number): string => {
+  if (totalCount === 1) return 'col-span-6';
+  if (totalCount === 2) return 'col-span-3';
+  if (totalCount === 3) return 'col-span-2';
+  if (totalCount === 4) return 'col-span-3'; // 2x2 grid
+
+  const remainder = totalCount % 3;
+  if (remainder === 0) return 'col-span-2';
+  if (remainder === 1) {
+    if (index === totalCount - 1) return 'col-span-6';
+    return 'col-span-2';
+  }
+  if (remainder === 2) {
+    if (index >= totalCount - 2) return 'col-span-3';
+    return 'col-span-2';
+  }
+  return 'col-span-2';
+};
+
+const getTileSizeVariant = (totalCount: number): 'large' | 'medium' | 'compact' => {
+  if (totalCount <= 3) return 'large';
+  if (totalCount <= 6) return 'medium';
+  return 'compact';
+};
+
 export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
   business,
   links,
@@ -260,24 +286,42 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
             </span>
           </div>
 
-          {/* Active Links Stack (Recognizable Full-Width Action Buttons) */}
-          <div className="flex-1 flex flex-col space-y-2.5">
+          {/* Active Links: Adaptive Responsive Icon Grid */}
+          <div className="flex-1">
             {activeLinks.length === 0 ? (
-              <div className="py-7 px-4 text-center rounded-[20px] border border-dashed border-[#E4D2BB] bg-[#FFFDF9]/70 my-1">
+              <div className="py-7 px-4 text-center rounded-2xl border border-dashed border-[#E4D2BB] bg-[#FFFDF9]/70 my-1">
                 <p className="text-sm font-bold text-[#2B1A12]">No links added yet</p>
                 <p className="text-xs text-[#705B4D] mt-1">
                   Check back soon for official links.
                 </p>
               </div>
             ) : (
-              activeLinks.map((link, index) => (
-                <PublicLinkCard
-                  key={link.id}
-                  link={link}
-                  onLinkClick={onLinkClick}
-                  isPrimary={index === 0}
-                />
-              ))
+              <div
+                className={`grid grid-cols-6 ${
+                  activeLinks.length <= 3
+                    ? 'gap-2.5 sm:gap-3'
+                    : activeLinks.length <= 6
+                    ? 'gap-2 sm:gap-2.5'
+                    : 'gap-1.5 sm:gap-2'
+                }`}
+              >
+                {activeLinks.map((link, index) => {
+                  const colSpan = getTileColSpan(index, activeLinks.length);
+                  const sizeVariant = getTileSizeVariant(activeLinks.length);
+                  const isFullSpan = colSpan === 'col-span-6' && activeLinks.length > 1;
+
+                  return (
+                    <div key={link.id} className={colSpan}>
+                      <PublicLinkCard
+                        link={link}
+                        onLinkClick={onLinkClick}
+                        sizeVariant={sizeVariant}
+                        isFullSpan={isFullSpan}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
