@@ -52,8 +52,8 @@ export const ResetPassword: React.FC = () => {
         {success ? (
           <div className="text-center space-y-3 py-4">
             <CheckCircle2 className="w-10 h-10 text-[#22C55E] mx-auto" />
-            <h3 className="text-base font-bold text-[#F8FAFC]">Password Updated!</h3>
-            <p className="text-xs text-[#94A3B8]">
+            <h3 className="text-base font-bold text-[#FDFBF7]">Password Updated!</h3>
+            <p className="text-xs text-[#BFA08A]">
               Your password has been changed. Redirecting to dashboard...
             </p>
           </div>
@@ -68,7 +68,7 @@ export const ResetPassword: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+              leftAddon={<Lock className="w-4 h-4 text-[#BFA08A]" />}
               helperText="Must be at least 6 characters"
             />
 
@@ -79,7 +79,7 @@ export const ResetPassword: React.FC = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+              leftAddon={<Lock className="w-4 h-4 text-[#BFA08A]" />}
             />
 
             <Button

@@ -13,6 +13,16 @@ export function isValidUrl(urlString: string, type?: LinkType): boolean {
   if (!urlString || typeof urlString !== 'string') return false;
   const trimmed = urlString.trim();
 
+  if (type === 'call') {
+    if (trimmed.startsWith('tel:')) return trimmed.length > 4;
+    return /^\+?[0-9\s-()]{7,20}$/.test(trimmed);
+  }
+
+  if (type === 'email') {
+    const clean = trimmed.replace(/^mailto:/i, '');
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
+  }
+
   if (type === 'whatsapp') {
     // Can be wa.me link or phone number
     if (/^https?:\/\/(wa\.me|api\.whatsapp\.com)\/.+/i.test(trimmed)) return true;
@@ -33,6 +43,17 @@ export function isValidUrl(urlString: string, type?: LinkType): boolean {
  */
 export function normalizeUrl(url: string, type?: LinkType): string {
   const trimmed = url.trim();
+
+  if (type === 'call') {
+    if (trimmed.startsWith('tel:')) return trimmed;
+    const cleanNumber = trimmed.replace(/[^\d+]/g, '');
+    return `tel:${cleanNumber}`;
+  }
+
+  if (type === 'email') {
+    if (trimmed.toLowerCase().startsWith('mailto:')) return trimmed;
+    return `mailto:${trimmed}`;
+  }
 
   if (type === 'whatsapp') {
     if (trimmed.startsWith('https://wa.me/') || trimmed.startsWith('http://wa.me/')) {

@@ -28,75 +28,75 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   };
 
   return (
-    <div className="min-h-screen bg-[#07111F] text-[#F8FAFC] flex flex-col selection:bg-[#14243A] selection:text-[#38BDF8]">
+    <div className="min-h-screen bg-[#140D08] text-[#FBF9F5] flex flex-col selection:bg-[#2E1F15] selection:text-[#D49B5B]">
       <Navbar />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Business Prompt if no business profile exists yet */}
         {!business ? (
-          <div className="mb-6 p-4.5 rounded-2xl bg-[#101D30] border border-[#20344D] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="mb-6 p-4.5 rounded-2xl bg-[#241810] border border-[#3D2B1F] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="p-2.5 bg-[#14243A] text-[#38BDF8] border border-[#20344D] rounded-xl shrink-0">
+              <div className="p-2.5 bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F] rounded-xl shrink-0">
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#F8FAFC] tracking-tight">
+                <h4 className="text-sm font-bold text-[#FBF9F5] tracking-tight">
                   Business Profile Setup Needed
                 </h4>
-                <p className="text-xs text-[#94A3B8] leading-normal mt-0.5">
+                <p className="text-xs text-[#9E8E81] leading-normal mt-0.5">
                   Create your business profile to generate your single permanent public URL and QR code.
                 </p>
               </div>
             </div>
             <Link
               to="/dashboard/profile"
-              className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-[#0EA5E9] hover:bg-[#0284C7] rounded-xl shadow-xs transition-all shrink-0 border border-[#0EA5E9]"
+              className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-[#140D08] bg-[#D49B5B] hover:bg-[#E2B176] rounded-xl shadow-xs transition-all shrink-0 border border-[#D49B5B]"
             >
               Set Up Profile Now
             </Link>
           </div>
         ) : (
           /* Permanent URL Highlight Banner */
-          <div className="mb-6 relative overflow-hidden bg-[#0B1728] border border-[#20344D] rounded-2xl p-5 text-white shadow-sm">
+          <div className="mb-6 relative overflow-hidden bg-[#1B120B] border border-[#3D2B1F] rounded-2xl p-5 text-[#FBF9F5] shadow-sm">
             {/* Background subtle radial glow */}
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-[#0EA5E9]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-[#D49B5B]/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-[#101D30] text-[#38BDF8] border border-[#20344D] px-2.5 py-0.5 rounded-full">
-                    <Sparkles className="w-3 h-3 text-[#0EA5E9]" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-[#241810] text-[#D49B5B] border border-[#3D2B1F] px-2.5 py-0.5 rounded-full">
+                    <Sparkles className="w-3 h-3 text-[#D49B5B]" />
                     <span>Single Permanent URL</span>
                   </span>
-                  <span className="text-[11px] text-[#94A3B8] font-medium">
+                  <span className="text-[11px] text-[#9E8E81] font-medium">
                     Never changes, even when updating links
                   </span>
                 </div>
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs sm:text-sm font-semibold text-[#F8FAFC] truncate bg-[#101D30] px-3.5 py-1.5 rounded-xl border border-[#20344D] select-all">
+                  <span className="font-mono text-xs sm:text-sm font-semibold text-[#FBF9F5] truncate bg-[#241810] px-3.5 py-1.5 rounded-xl border border-[#3D2B1F] select-all">
                     {publicUrl}
                   </span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons: 1 canonical spot for copy, QR, open profile */}
               <div className="flex items-center gap-2 flex-wrap shrink-0">
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#101D30] hover:bg-[#14243A] text-[#F8FAFC] border border-[#20344D] hover:border-[#38BDF8]/40 transition-all cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#241810] hover:bg-[#2E1F15] text-[#FBF9F5] border border-[#3D2B1F] hover:border-[#D49B5B]/50 transition-all cursor-pointer shadow-2xs"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Copy className="w-3.5 h-3.5 text-[#94A3B8]" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Copy className="w-3.5 h-3.5 text-[#9E8E81]" />}
                   <span>{copied ? 'Copied URL!' : 'Copy Link'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setShowQRModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#101D30] hover:bg-[#14243A] text-[#F8FAFC] border border-[#20344D] hover:border-[#38BDF8]/40 transition-all cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#241810] hover:bg-[#2E1F15] text-[#FBF9F5] border border-[#3D2B1F] hover:border-[#D49B5B]/50 transition-all cursor-pointer shadow-2xs"
                 >
-                  <QrCode className="w-3.5 h-3.5 text-[#94A3B8]" />
+                  <QrCode className="w-3.5 h-3.5 text-[#9E8E81]" />
                   <span>View QR</span>
                 </button>
 
@@ -104,10 +104,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                   href={getInternalBusinessPath(business.slug)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white shadow-xs transition-all border border-[#0EA5E9]"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-[#D49B5B] hover:bg-[#E2B176] text-[#140D08] shadow-xs transition-all border border-[#D49B5B]"
                 >
                   <span>Open Profile</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-white/90" />
+                  <ExternalLink className="w-3.5 h-3.5 text-[#140D08]" />
                 </a>
               </div>
             </div>

@@ -79,20 +79,39 @@ export const PublicProfilePage: React.FC = () => {
 
         setLinks(bizLinks);
 
-        // Filter active assignments with active sponsor objects
-        const activeBizSponsors = bizSponsors.filter(
-          (bs) => bs.is_active !== false && bs.sponsor && bs.sponsor.is_active !== false
-        );
+        // Filter active assignments with active sponsor objects, excluding self-sponsorship
+        const activeBizSponsors = bizSponsors.filter((bs) => {
+          if (bs.is_active === false || !bs.sponsor || bs.sponsor.is_active === false) {
+            return false;
+          }
+          // Do not automatically show a business as its own sponsor
+          const normBiz = biz.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+          const normSp = bs.sponsor.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+          const isSelfSponsor = normBiz === normSp;
+          if (isSelfSponsor) {
+            return false;
+          }
+          return true;
+        });
 
-        const headerList = activeBizSponsors
-          .filter((bs) => bs.placement === 'header' || bs.placement === 'both' || !bs.placement)
-          .map((bs) => bs.sponsor!)
-          .filter(Boolean);
+        // Current Rule: One business can have ONLY ONE active sponsor at this time
+        const singleActive = activeBizSponsors[0];
 
-        const footerList = activeBizSponsors
-          .filter((bs) => bs.placement === 'footer' || bs.placement === 'both' || !bs.placement)
-          .map((bs) => bs.sponsor!)
-          .filter(Boolean);
+        const headerList =
+          singleActive &&
+          (singleActive.placement === 'header' ||
+            singleActive.placement === 'both' ||
+            !singleActive.placement)
+            ? [singleActive.sponsor!]
+            : [];
+
+        const footerList =
+          singleActive &&
+          (singleActive.placement === 'footer' ||
+            singleActive.placement === 'both' ||
+            !singleActive.placement)
+            ? [singleActive.sponsor!]
+            : [];
 
         setHeaderSponsors(headerList);
         setFooterSponsors(footerList);
@@ -127,8 +146,8 @@ export const PublicProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#07111F] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[#101D30] rounded-3xl border border-[#20344D] p-10 flex flex-col items-center justify-center text-center">
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#FAF8F5] rounded-3xl border border-[#E8E1D5] p-10 flex flex-col items-center justify-center text-center shadow-sm">
           <LoadingSpinner size="lg" label="Loading business profile..." />
         </div>
       </div>
@@ -137,23 +156,23 @@ export const PublicProfilePage: React.FC = () => {
 
   if (isSuspended && business) {
     return (
-      <div className="min-h-screen bg-[#07111F] flex flex-col items-center justify-center p-4 sm:p-6 text-center text-[#F8FAFC]">
-        <div className="max-w-md w-full bg-[#101D30] rounded-3xl border border-[#20344D] p-7 sm:p-8 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-amber-950/40 text-amber-400 flex items-center justify-center mb-4 border border-amber-800/40">
+      <div className="min-h-screen bg-[#F5F2EB] flex flex-col items-center justify-center p-4 sm:p-6 text-center text-[#1A120B]">
+        <div className="max-w-md w-full bg-[#FAF8F5] rounded-3xl border border-[#E8E1D5] p-7 sm:p-8 flex flex-col items-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 border border-amber-200">
             <ShieldAlert className="w-8 h-8 stroke-[1.75]" />
           </div>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-amber-950/40 text-amber-300 border border-amber-800/40 mb-2.5">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-amber-50 text-amber-700 border border-amber-200 mb-2.5">
             Profile Inactive
           </span>
-          <h1 className="text-xl sm:text-2xl font-black text-[#F8FAFC] tracking-tight leading-snug">
+          <h1 className="text-xl sm:text-2xl font-black text-[#1A120B] tracking-tight leading-snug">
             This profile is currently unavailable.
           </h1>
-          <p className="mt-2 text-xs text-[#94A3B8] leading-relaxed max-w-xs">
-            The business page for <strong className="text-[#F8FAFC]">{business.name}</strong> (<span className="font-mono text-[#F8FAFC]">/b/{business.slug}</span>) is temporarily inactive. If you are the owner, please check your dashboard or contact support.
+          <p className="mt-2 text-xs text-[#5C493B] leading-relaxed max-w-xs">
+            The business page for <strong className="text-[#1A120B]">{business.name}</strong> (<span className="font-mono text-[#8C531B]">/b/{business.slug}</span>) is temporarily inactive. If you are the owner, please check your dashboard or contact support.
           </p>
           <div className="mt-6 w-full flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/" className="w-full sm:w-auto">
-              <Button variant="outline" size="md" icon={<Home className="w-4 h-4" />} className="w-full justify-center bg-[#14243A] border-[#20344D] text-[#F8FAFC] hover:bg-[#101D30]">
+              <Button variant="outline" size="md" icon={<Home className="w-4 h-4" />} className="w-full justify-center bg-white border-[#E8E1D5] text-[#1A120B] hover:bg-[#FAF0E6]">
                 Return to PersonToPerson
               </Button>
             </Link>
@@ -165,18 +184,18 @@ export const PublicProfilePage: React.FC = () => {
 
   if (notFound || !business) {
     return (
-      <div className="min-h-screen bg-[#07111F] flex flex-col items-center justify-center p-4 sm:p-6 text-center text-[#F8FAFC]">
-        <div className="max-w-md w-full bg-[#101D30] rounded-3xl border border-[#20344D] p-7 sm:p-8 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#14243A] text-[#94A3B8] flex items-center justify-center mb-4 border border-[#20344D]">
+      <div className="min-h-screen bg-[#F5F2EB] flex flex-col items-center justify-center p-4 sm:p-6 text-center text-[#1A120B]">
+        <div className="max-w-md w-full bg-[#FAF8F5] rounded-3xl border border-[#E8E1D5] p-7 sm:p-8 flex flex-col items-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-white text-[#8C7767] flex items-center justify-center mb-4 border border-[#E8E1D5]">
             <Building2 className="w-8 h-8 stroke-[1.75]" />
           </div>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-[#14243A] text-[#94A3B8] border border-[#20344D] mb-2.5">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-white text-[#8C7767] border border-[#E8E1D5] mb-2.5">
             Not Found
           </span>
-          <h1 className="text-xl sm:text-2xl font-black text-[#F8FAFC] tracking-tight leading-snug">
+          <h1 className="text-xl sm:text-2xl font-black text-[#1A120B] tracking-tight leading-snug">
             Business Profile Not Found
           </h1>
-          <p className="mt-2 text-xs text-[#94A3B8] leading-relaxed max-w-xs">
+          <p className="mt-2 text-xs text-[#5C493B] leading-relaxed max-w-xs">
             The public business page you are looking for does not exist or may have been updated. Please verify the URL and try again.
           </p>
           <div className="mt-6 w-full flex flex-col sm:flex-row items-center justify-center gap-3">

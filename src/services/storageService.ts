@@ -48,10 +48,9 @@ export const storageService = {
   },
 
   /**
-   * Upload sponsor logo image to Supabase Storage bucket ('sponsors')
-   * or fallback to base64 Data URL if Supabase is offline / local.
+   * Upload business logo image to Supabase Storage or fallback to base64 Data URL
    */
-  async uploadSponsorLogo(file: File): Promise<string> {
+  async uploadBusinessLogo(file: File): Promise<string> {
     const validation = this.validateImageFile(file);
     if (!validation.valid) {
       throw new Error(validation.error);
@@ -65,57 +64,32 @@ export const storageService = {
         .replace(/[^a-zA-Z0-9_-]/g, '_')
         .toLowerCase()
         .slice(0, 30);
-      const filePath = `logos/${Date.now()}_${cleanFileName}.${fileExt}`;
+      const filePath = `business-logos/${Date.now()}_${cleanFileName}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: file.type || 'image/png',
-        });
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: file.type || 'image/png',
+          });
 
-      if (uploadError) {
-        console.error('Supabase storage upload error:', uploadError);
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filePath);
 
-        // Friendly error messages for common Supabase storage configurations
-        const errMsg = uploadError.message || '';
-        if (
-          errMsg.includes('Bucket not found') ||
-          errMsg.includes('not found') ||
-          (uploadError as { statusCode?: string }).statusCode === '404'
-        ) {
-          throw new Error(
-            `Supabase Storage bucket '${BUCKET_NAME}' was not found. Please create a public bucket named '${BUCKET_NAME}' in your Supabase Dashboard under Storage > Buckets, or use the 'Image URL' option to paste a direct image URL.`
-          );
+          if (publicUrlData?.publicUrl) {
+            return publicUrlData.publicUrl;
+          }
         }
-
-        if (
-          errMsg.includes('row-level security') ||
-          errMsg.includes('violates row-level security policy') ||
-          (uploadError as { statusCode?: string }).statusCode === '403'
-        ) {
-          throw new Error(
-            `Storage permission denied. Please ensure the '${BUCKET_NAME}' bucket in Supabase has public upload/read policies configured, or use the 'Image URL' option.`
-          );
-        }
-
-        throw new Error(`Upload failed: ${errMsg}`);
+      } catch (err) {
+        console.warn('Supabase storage upload failed, falling back to local base64:', err);
       }
-
-      // Retrieve and return public image URL
-      const { data: publicUrlData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData?.publicUrl) {
-        throw new Error('Failed to retrieve public URL for the uploaded image.');
-      }
-
-      return publicUrlData.publicUrl;
     }
 
-    // 2. Local fallback (Data URL for offline development)
+    // 2. Local / offline fallback (Data URL)
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -126,6 +100,67 @@ export const storageService = {
         }
       };
       reader.onerror = () => reject(new Error('Failed to read image file locally.'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Upload sponsor logo image to Supabase Storage bucket ('sponsors')
+   * with resilient fallback to Data URL if the cloud bucket is pending initialization.
+   */
+  async uploadSponsorLogo(file: File): Promise<string> {
+    const validation = this.validateImageFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
+    // 1. Attempt Supabase Storage Upload if Supabase is configured
+    if (isSupabaseConfigured) {
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const cleanFileName = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .toLowerCase()
+        .slice(0, 30);
+      const filePath = `logos/${Date.now()}_${cleanFileName}.${fileExt}`;
+
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: file.type || 'image/png',
+          });
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filePath);
+
+          if (publicUrlData?.publicUrl) {
+            return publicUrlData.publicUrl;
+          }
+        } else {
+          console.warn('Supabase storage upload error:', uploadError.message);
+          // If bucket is not found or permissions issue, fall through to resilient local Data URL
+        }
+      } catch (err) {
+        console.warn('Supabase Storage connection failed, falling back to inline Data URL:', err);
+      }
+    }
+
+    // 2. Resilient fallback (Data URL for instant preview, offline, or pending cloud bucket)
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to process image file.'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file from disk.'));
       reader.readAsDataURL(file);
     });
   },

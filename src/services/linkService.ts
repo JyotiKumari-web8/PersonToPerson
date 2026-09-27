@@ -40,8 +40,21 @@ export const linkService = {
     display_order?: number;
   }): Promise<BusinessLink> {
     const existing = await this.getLinksByBusinessId(payload.business_id, false);
-    const nextOrder = payload.display_order ?? (existing.length > 0 ? Math.max(...existing.map((l) => l.display_order)) + 1 : 0);
     const cleanedUrl = normalizeUrl(payload.url, payload.link_type);
+
+    // Enforce unique link-type rule: if a predefined link-type already exists, update it instead of creating duplicate
+    if (payload.link_type !== 'custom') {
+      const duplicate = existing.find((l) => l.link_type === payload.link_type);
+      if (duplicate) {
+        return this.updateLink(duplicate.id, {
+          label: payload.label.trim(),
+          url: cleanedUrl,
+          is_active: payload.is_active ?? true,
+        });
+      }
+    }
+
+    const nextOrder = payload.display_order ?? (existing.length > 0 ? Math.max(...existing.map((l) => l.display_order)) + 1 : 0);
 
     if (isSupabaseConfigured) {
       const { data, error } = await supabase

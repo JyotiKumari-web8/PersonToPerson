@@ -58,17 +58,17 @@ export const Login: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            leftAddon={<Mail className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<Mail className="w-4 h-4 text-[#BFA08A]" />}
           />
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider">
+              <label className="text-[11px] font-bold text-[#E6D7C8] uppercase tracking-wider">
                 Password
               </label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-[#38BDF8] hover:underline"
+                className="text-xs font-semibold text-[#D49B5B] hover:underline"
               >
                 Forgot password?
               </Link>
@@ -79,7 +79,7 @@ export const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+              leftAddon={<Lock className="w-4 h-4 text-[#BFA08A]" />}
             />
           </div>
 
@@ -94,9 +94,9 @@ export const Login: React.FC = () => {
           </Button>
         </CardContent>
 
-        <CardFooter className="justify-center text-xs text-[#94A3B8] py-4 bg-[#0B1728] border-t border-[#20344D]">
+        <CardFooter className="justify-center text-xs text-[#BFA08A] py-4 bg-[#1B120B] border-t border-[#3D2B1F]">
           Don't have an account?{' '}
-          <Link to="/signup" className="ml-1.5 font-bold text-[#38BDF8] hover:underline">
+          <Link to="/signup" className="ml-1.5 font-bold text-[#D49B5B] hover:underline">
             Create an account
           </Link>
         </CardFooter>

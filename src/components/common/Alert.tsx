@@ -17,8 +17,8 @@ export const Alert: React.FC<AlertProps> = ({
 }) => {
   const styles = {
     info: {
-      container: 'bg-[#101D30] border-[#20344D] text-[#CBD5E1]',
-      iconBg: 'bg-[#14243A] text-[#38BDF8] border border-[#20344D]',
+      container: 'bg-[#241810] border-[#3D2B1F] text-[#DDD3CA]',
+      iconBg: 'bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F]',
       icon: <Info className="w-4 h-4 shrink-0" />,
     },
     success: {
@@ -46,7 +46,7 @@ export const Alert: React.FC<AlertProps> = ({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        {title && <h4 className="font-bold text-[#F8FAFC] mb-0.5 tracking-tight">{title}</h4>}
+        {title && <h4 className="font-bold text-[#FBF9F5] mb-0.5 tracking-tight">{title}</h4>}
         <div className="leading-relaxed opacity-95">{message}</div>
       </div>
     </div>

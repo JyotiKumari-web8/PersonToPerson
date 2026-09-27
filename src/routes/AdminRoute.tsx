@@ -8,7 +8,7 @@ export const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#07111F]">
+      <div className="min-h-screen flex items-center justify-center bg-[#140D08]">
         <LoadingSpinner size="lg" label="Checking permissions..." />
       </div>
     );

@@ -48,8 +48,8 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Account Settings</h1>
-        <p className="text-xs text-[#94A3B8] mt-0.5">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-[#FDFBF7] tracking-tight">Account Settings</h1>
+        <p className="text-xs text-[#BFA08A] mt-0.5">
           Manage your account credentials, security preferences, and authentication details.
         </p>
       </div>
@@ -79,11 +79,11 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center gap-2.5 p-3.5 bg-[#0B1728] rounded-xl border border-[#20344D] text-xs shadow-xs">
+          <div className="flex items-center gap-2.5 p-3.5 bg-[#1B120B] rounded-xl border border-[#3D2B1F] text-xs shadow-xs">
             <ShieldCheck className="w-4 h-4 text-[#22C55E] shrink-0" />
-            <span className="text-[#94A3B8] font-medium">
+            <span className="text-[#BFA08A] font-medium">
               Account Role:{' '}
-              <strong className="text-[#F8FAFC] capitalize font-bold">
+              <strong className="text-[#FDFBF7] capitalize font-bold">
                 {user?.role?.replace('_', ' ') || 'Business Owner'}
               </strong>
             </span>

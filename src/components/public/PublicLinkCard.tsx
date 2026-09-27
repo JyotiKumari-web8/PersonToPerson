@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BusinessLink } from '@/types';
 import { LINK_TYPE_CONFIG } from '@/components/business/linkIcons';
-import { ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 interface PublicLinkCardProps {
   link: BusinessLink;
@@ -9,10 +9,59 @@ interface PublicLinkCardProps {
   isPrimary?: boolean;
 }
 
+// Maps verbose titles to short, direct, recognizable platform/action titles
+const VERBOSE_TITLE_MAP: Record<string, string> = {
+  'visit our website': 'Official Website',
+  'visit website': 'Official Website',
+  'our website': 'Official Website',
+  'visit official website': 'Official Website',
+  'website': 'Official Website',
+  'official website': 'Official Website',
+  'follow on instagram': 'Instagram',
+  'follow us on instagram': 'Instagram',
+  'instagram': 'Instagram',
+  'follow on facebook': 'Facebook',
+  'follow us on facebook': 'Facebook',
+  'facebook': 'Facebook',
+  'watch our videos': 'YouTube',
+  'watch on youtube': 'YouTube',
+  'subscribe on youtube': 'YouTube',
+  'youtube': 'YouTube',
+  'chat with us': 'WhatsApp',
+  'chat on whatsapp': 'WhatsApp',
+  'whatsapp': 'WhatsApp',
+  'leave a google review': 'Google Review',
+  'leave a review': 'Google Review',
+  'google review': 'Google Review',
+  'google reviews': 'Google Review',
+  'review on google': 'Google Review',
+  'review us on google': 'Google Review',
+  'find our location': 'Google Maps',
+  'google maps': 'Google Maps',
+  'view on google maps': 'Google Maps',
+  'pay online': 'Payment',
+  'pay online securely': 'Payment',
+  'payment': 'Payment',
+  'book an appointment': 'Booking',
+  'booking': 'Booking',
+  'book now': 'Booking',
+  'call us directly': 'Call',
+  'call': 'Call',
+  'call us': 'Call',
+  'send us an email': 'Email',
+  'email': 'Email',
+  'email us': 'Email',
+  'view our menu': 'Menu',
+  'menu': 'Menu',
+  'apply online now': 'Admission',
+  'admission': 'Admission',
+  'explore recent work': 'Portfolio',
+  'portfolio': 'Portfolio',
+};
+
 export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
   link,
   onLinkClick,
-  isPrimary = false,
 }) => {
   const [isPressed, setIsPressed] = useState(false);
   const cfg = LINK_TYPE_CONFIG[link.link_type] || LINK_TYPE_CONFIG.custom;
@@ -21,6 +70,12 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     e.preventDefault();
     onLinkClick(link.id, link.url);
   };
+
+  // Resolve short, direct title:
+  const rawLabel = (link.label || '').trim();
+  const lowerLabel = rawLabel.toLowerCase();
+  const displayTitle = VERBOSE_TITLE_MAP[lowerLabel] || rawLabel || cfg.defaultLabel;
+  const displaySubtitle = cfg.defaultSubtitle;
 
   return (
     <a
@@ -32,50 +87,28 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
       onMouseUp={() => setIsPressed(false)}
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}
-      className={`group relative flex items-center justify-between w-full min-h-[56px] px-3.5 py-3 rounded-2xl border transition-all duration-150 cursor-pointer select-none ${
+      className={`group relative flex items-center justify-between w-full p-3 sm:p-3.5 rounded-[20px] border border-[#E4D2BB] bg-[#FDFBF7] hover:bg-[#FFFFFF] hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-[0_8px_20px_-4px_rgba(43,26,18,0.12)] transition-all duration-150 cursor-pointer select-none active:scale-[0.985] min-h-[64px] ${
         isPressed ? 'scale-[0.985]' : ''
-      } ${
-        isPrimary
-          ? 'bg-gradient-to-r from-[#14243A] via-[#14243A] to-[#0EA5E9]/15 hover:bg-[#101D30] border-[#0EA5E9]/80 hover:border-[#38BDF8] shadow-[0_4px_20px_-4px_rgba(14,165,233,0.22)]'
-          : 'bg-[#101D30] hover:bg-[#14243A] border-[#20344D] hover:border-[#38BDF8]/50 shadow-2xs'
       }`}
     >
-      <div className="flex items-center gap-3 min-w-0 pr-2">
-        {/* Category-tinted squircle icon container */}
-        <div className="w-10 h-10 rounded-xl bg-[#0B1728] border border-[#20344D] flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-105 shadow-inner">
-          {cfg.icon({ className: `w-[18px] h-[18px] ${cfg.colorClass}` })}
-        </div>
+      <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 pr-2">
+        {/* Authentic Recognizable Brand/Action Icon Badge */}
+        {cfg.brandBadge()}
 
-        {/* Title and Category info */}
+        {/* Short Direct Title and Clear Subtitle */}
         <div className="min-w-0 text-left">
-          <span className="block text-[13.5px] font-semibold text-[#F8FAFC] group-hover:text-white transition-colors truncate tracking-tight">
-            {link.label}
+          <span className="block text-[14.5px] sm:text-[15.5px] font-extrabold text-[#2B1A12] group-hover:text-[#4A2A1A] transition-colors truncate tracking-tight">
+            {displayTitle}
           </span>
-          <span className="text-[11px] text-[#94A3B8] font-medium flex items-center gap-1.5 mt-0.5">
-            {isPrimary && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#0EA5E9] bg-[#0B1728] border border-[#0EA5E9]/40 px-1.5 py-0.5 rounded tracking-wider uppercase">
-                <Sparkles className="w-2.5 h-2.5 text-[#0EA5E9]" />
-                Featured
-              </span>
-            )}
-            <span className="truncate">{cfg.label}</span>
+          <span className="block text-[11px] sm:text-xs text-[#705B4D] font-medium truncate mt-0.5">
+            {displaySubtitle}
           </span>
         </div>
       </div>
 
-      {/* Action Indicator Pill */}
-      <div
-        className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-[#0B1728] border transition-colors ${
-          isPrimary
-            ? 'border-[#0EA5E9]/40 text-[#0EA5E9] group-hover:border-[#38BDF8] group-hover:bg-[#14243A]'
-            : 'border-[#20344D] text-[#94A3B8] group-hover:text-[#38BDF8] group-hover:border-[#38BDF8]/60'
-        }`}
-      >
-        {link.link_type === 'whatsapp' || link.link_type === 'payment' ? (
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
-        ) : (
-          <ExternalLink className="w-3.5 h-3.5" />
-        )}
+      {/* Outward Link Arrow Box */}
+      <div className="w-8 h-8 rounded-xl border border-[#E4D2BB] bg-[#FFFDF9] group-hover:bg-white group-hover:border-[#C8924A]/70 flex items-center justify-center text-[#705B4D] group-hover:text-[#2B1A12] transition-colors shrink-0 shadow-2xs">
+        <ExternalLink className="w-3.5 h-3.5" />
       </div>
     </a>
   );

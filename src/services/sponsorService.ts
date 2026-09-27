@@ -25,7 +25,9 @@ export const sponsorService = {
     logo_url?: string;
     website_url: string;
     description?: string;
+    is_active?: boolean;
   }): Promise<Sponsor> {
+    const isActive = payload.is_active !== false;
     if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('sponsors')
@@ -34,7 +36,7 @@ export const sponsorService = {
           logo_url: payload.logo_url || null,
           website_url: payload.website_url.trim(),
           description: payload.description || null,
-          is_active: true,
+          is_active: isActive,
         })
         .select()
         .single();
@@ -49,7 +51,7 @@ export const sponsorService = {
       logo_url: payload.logo_url,
       website_url: payload.website_url.trim(),
       description: payload.description,
-      is_active: true,
+      is_active: isActive,
       created_at: new Date().toISOString(),
     };
 
@@ -146,10 +148,12 @@ export const sponsorService = {
         rawData = primary.data;
       }
 
-      return (((rawData as unknown as BusinessSponsor[]) || []).map((bs) => ({
-        ...bs,
-        placement: bs.placement || 'both',
-      }))) as BusinessSponsor[];
+      return (((rawData as unknown as BusinessSponsor[]) || [])
+        .map((bs) => ({
+          ...bs,
+          placement: bs.placement || 'both',
+        }))
+        .filter((bs) => bs.is_active && bs.sponsor && bs.sponsor.is_active)) as BusinessSponsor[];
     }
 
     const links = localStore.getBusinessSponsors().filter(
@@ -231,6 +235,26 @@ export const sponsorService = {
     placement: SponsorPlacement = 'both'
   ): Promise<BusinessSponsor> {
     if (isSupabaseConfigured) {
+      // 1. Self-sponsor prevention
+      const [bizRes, spRes] = await Promise.all([
+        supabase.from('businesses').select('name').eq('id', businessId).single(),
+        supabase.from('sponsors').select('name').eq('id', sponsorId).single(),
+      ]);
+      if (bizRes.data && spRes.data) {
+        const normBiz = bizRes.data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+        const normSp = spRes.data.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+        if (normBiz === normSp) {
+          throw new Error('A business cannot be assigned as its own sponsor.');
+        }
+      }
+
+      // 2. Enforcement: One business can have ONLY ONE ACTIVE sponsor
+      const existingActive = await this.getBusinessSponsors(businessId);
+      const conflicting = existingActive.find((bs) => bs.is_active && bs.sponsor_id !== sponsorId);
+      if (conflicting) {
+        throw new Error('Only one sponsor can be assigned to a business at this time.');
+      }
+
       const payload: Record<string, unknown> = {
         business_id: businessId,
         sponsor_id: sponsorId,
@@ -269,6 +293,13 @@ export const sponsorService = {
     }
 
     const all = localStore.getBusinessSponsors();
+    const existingActive = all.find(
+      (bs) => bs.business_id === businessId && bs.is_active && bs.sponsor_id !== sponsorId
+    );
+    if (existingActive) {
+      throw new Error('Only one sponsor can be assigned to a business at this time.');
+    }
+
     const existingIndex = all.findIndex(
       (bs) => bs.business_id === businessId && bs.sponsor_id === sponsorId
     );
@@ -334,6 +365,28 @@ export const sponsorService = {
     isActive: boolean
   ): Promise<boolean> {
     if (isSupabaseConfigured) {
+      if (isActive) {
+        // Enforce: only one active sponsor per business
+        const { data: current } = await supabase
+          .from('business_sponsors')
+          .select('business_id, sponsor_id')
+          .eq('id', assignmentId)
+          .single();
+
+        if (current) {
+          const { data: conflicting } = await supabase
+            .from('business_sponsors')
+            .select('id')
+            .eq('business_id', current.business_id)
+            .eq('is_active', true)
+            .neq('id', assignmentId);
+
+          if (conflicting && conflicting.length > 0) {
+            throw new Error('Only one sponsor can be assigned to a business at this time.');
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('business_sponsors')
         .update({ is_active: isActive })
@@ -346,6 +399,14 @@ export const sponsorService = {
     const all = localStore.getBusinessSponsors();
     const idx = all.findIndex((bs) => bs.id === assignmentId);
     if (idx >= 0) {
+      if (isActive) {
+        const conflicting = all.find(
+          (bs) => bs.business_id === all[idx].business_id && bs.id !== assignmentId && bs.is_active
+        );
+        if (conflicting) {
+          throw new Error('Only one sponsor can be assigned to a business at this time.');
+        }
+      }
       all[idx].is_active = isActive;
       localStore.saveBusinessSponsors(all);
       return true;

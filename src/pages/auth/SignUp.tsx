@@ -75,7 +75,7 @@ export const SignUp: React.FC = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            leftAddon={<User className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<User className="w-4 h-4 text-[#BFA08A]" />}
           />
 
           <Input
@@ -85,7 +85,7 @@ export const SignUp: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            leftAddon={<Mail className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<Mail className="w-4 h-4 text-[#BFA08A]" />}
           />
 
           <Input
@@ -95,7 +95,7 @@ export const SignUp: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<Lock className="w-4 h-4 text-[#BFA08A]" />}
             helperText="Must contain at least 6 characters"
           />
 
@@ -106,7 +106,7 @@ export const SignUp: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            leftAddon={<Lock className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<Lock className="w-4 h-4 text-[#BFA08A]" />}
           />
 
           <Button
@@ -120,9 +120,9 @@ export const SignUp: React.FC = () => {
           </Button>
         </CardContent>
 
-        <CardFooter className="justify-center text-xs text-[#94A3B8] py-4 bg-[#0B1728] border-t border-[#20344D]">
+        <CardFooter className="justify-center text-xs text-[#BFA08A] py-4 bg-[#1B120B] border-t border-[#3D2B1F]">
           Already have an account?{' '}
-          <Link to="/login" className="ml-1.5 font-bold text-[#38BDF8] hover:underline">
+          <Link to="/login" className="ml-1.5 font-bold text-[#D49B5B] hover:underline">
             Sign in
           </Link>
         </CardFooter>

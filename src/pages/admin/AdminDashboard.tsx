@@ -30,7 +30,7 @@ export const AdminDashboard: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [modalCopied, setModalCopied] = useState(false);
 
-  // Business Details Modal state (Requirement 3 & 4)
+  // Business Details Modal state
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export const AdminDashboard: React.FC = () => {
       setTimeout(() => setActionFeedback(null), 3500);
     } catch (err) {
       console.error('Failed to update business status:', err);
-      setActionFeedback('Failed to update business status. Please check Supabase permissions.');
+      setActionFeedback('Failed to update business status. Please verify permissions and try again.');
       setTimeout(() => setActionFeedback(null), 4000);
     } finally {
       setIsUpdatingStatus(false);
@@ -122,14 +122,14 @@ export const AdminDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#FBF9F5] tracking-tight">
               Platform Owner Control
             </h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-[#14243A] text-[#38BDF8] border border-[#20344D] shadow-xs">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F] shadow-xs">
               Super Admin
             </span>
           </div>
-          <p className="text-xs text-[#94A3B8] mt-1">
+          <p className="text-xs text-[#9E8E81] mt-1">
             Global view and management of all registered business accounts, owner emails, and permanent URLs.
           </p>
         </div>
@@ -139,33 +139,33 @@ export const AdminDashboard: React.FC = () => {
             placeholder="Search by name, email, slug..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            leftAddon={<Search className="w-4 h-4 text-[#94A3B8]" />}
+            leftAddon={<Search className="w-4 h-4 text-[#9E8E81]" />}
           />
         </div>
       </div>
 
       {actionFeedback && <Alert type="info" message={actionFeedback} />}
 
-      {/* Summary Metrics Cards (Requirement 2) */}
+      {/* Summary Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm flex items-center justify-between">
+        <div className="bg-[#241810] p-5 rounded-2xl border border-[#3D2B1F] shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[#9E8E81] uppercase tracking-wider">
               Total Businesses
             </span>
-            <div className="mt-1 text-2xl font-bold text-[#F8FAFC] tracking-tight">
+            <div className="mt-1 text-2xl font-bold text-[#FBF9F5] tracking-tight">
               {businesses.length}
             </div>
-            <span className="text-[10px] text-[#94A3B8] font-medium">Registered on platform</span>
+            <span className="text-[10px] text-[#9E8E81] font-medium">Registered on platform</span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-[#14243A] text-[#38BDF8] flex items-center justify-center shrink-0 border border-[#20344D]">
+          <div className="w-11 h-11 rounded-xl bg-[#2E1F15] text-[#D49B5B] flex items-center justify-center shrink-0 border border-[#3D2B1F]">
             <Building2 className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm flex items-center justify-between">
+        <div className="bg-[#241810] p-5 rounded-2xl border border-[#3D2B1F] shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[#9E8E81] uppercase tracking-wider">
               Active Businesses
             </span>
             <div className="mt-1 text-2xl font-bold text-[#22C55E] tracking-tight">
@@ -178,9 +178,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#101D30] p-5 rounded-2xl border border-[#20344D] shadow-sm flex items-center justify-between">
+        <div className="bg-[#241810] p-5 rounded-2xl border border-[#3D2B1F] shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[#9E8E81] uppercase tracking-wider">
               Suspended Businesses
             </span>
             <div className="mt-1 text-2xl font-bold text-[#EF4444] tracking-tight">
@@ -199,8 +199,8 @@ export const AdminDashboard: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Registered Businesses ({filtered.length})</CardTitle>
-            <span className="text-xs text-[#94A3B8] font-medium hidden sm:inline">
-              Real-time synchronization with Supabase production
+            <span className="text-xs text-[#9E8E81] font-medium hidden sm:inline">
+              Platform directory management
             </span>
           </div>
         </CardHeader>
@@ -208,13 +208,13 @@ export const AdminDashboard: React.FC = () => {
           {isLoading ? (
             <LoadingSpinner label="Loading business records..." />
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-[#94A3B8] text-xs">
+            <div className="p-8 text-center text-[#9E8E81] text-xs">
               No matching business profiles found.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#0B1728] border-b border-[#20344D] text-[#CBD5E1] font-bold uppercase tracking-wider text-[11px]">
+                <thead className="bg-[#1B120B] border-b border-[#3D2B1F] text-[#DDD3CA] font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Business</th>
                     <th className="py-3 px-4">Owner Email</th>
@@ -224,7 +224,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#20344D]">
+                <tbody className="divide-y divide-[#3D2B1F]">
                   {filtered.map((b) => {
                     const displayOwnerEmail = b.owner_email || b.email || '—';
                     const createdDate = b.created_at
@@ -236,7 +236,7 @@ export const AdminDashboard: React.FC = () => {
                       : '—';
 
                     return (
-                      <tr key={b.id} className="hover:bg-[#14243A]/40 transition-colors">
+                      <tr key={b.id} className="hover:bg-[#2E1F15]/40 transition-colors">
                         {/* Business Column */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
@@ -244,28 +244,28 @@ export const AdminDashboard: React.FC = () => {
                               <img
                                 src={b.logo_url}
                                 alt=""
-                                className="w-8 h-8 rounded-lg object-cover border border-[#20344D] shrink-0"
+                                className="w-8 h-8 rounded-lg object-cover border border-[#3D2B1F] shrink-0"
                               />
                             ) : (
-                              <div className="w-8 h-8 rounded-lg bg-[#14243A] text-[#38BDF8] border border-[#20344D] flex items-center justify-center font-bold shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F] flex items-center justify-center font-bold shrink-0">
                                 {b.name.charAt(0)}
                               </div>
                             )}
                             <div>
-                              <span className="font-semibold text-[#F8FAFC] block truncate max-w-[180px]">
+                              <span className="font-semibold text-[#FBF9F5] block truncate max-w-[180px]">
                                 {b.name}
                               </span>
-                              <span className="text-[10px] text-[#94A3B8] font-mono">
+                              <span className="text-[10px] text-[#9E8E81] font-mono">
                                 {b.category || b.city || `ID: ${b.id.substring(0, 8)}...`}
                               </span>
                             </div>
                           </div>
                         </td>
 
-                        {/* Owner Email Column (Requirement 2) */}
+                        {/* Owner Email Column */}
                         <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-1.5 text-[#CBD5E1] font-medium">
-                            <Mail className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="flex items-center gap-1.5 text-[#DDD3CA] font-medium">
+                            <Mail className="w-3.5 h-3.5 text-[#9E8E81] shrink-0" />
                             <span className="truncate max-w-[180px]" title={displayOwnerEmail}>
                               {displayOwnerEmail}
                             </span>
@@ -275,13 +275,13 @@ export const AdminDashboard: React.FC = () => {
                         {/* Permanent URL / Slug Column */}
                         <td className="py-3.5 px-4 font-mono">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[#38BDF8] font-semibold bg-[#14243A] px-2 py-0.5 rounded border border-[#20344D] text-[11px]">
+                            <span className="text-[#D49B5B] font-semibold bg-[#2E1F15] px-2 py-0.5 rounded border border-[#3D2B1F] text-[11px]">
                               /b/{b.slug}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleCopyUrl(b.slug, b.id)}
-                              className="p-1 rounded text-[#94A3B8] hover:text-[#38BDF8] hover:bg-[#14243A] transition-colors cursor-pointer"
+                              className="p-1 rounded text-[#9E8E81] hover:text-[#D49B5B] hover:bg-[#2E1F15] transition-colors cursor-pointer"
                               title="Copy permanent public URL"
                             >
                               {copiedId === b.id ? (
@@ -294,14 +294,14 @@ export const AdminDashboard: React.FC = () => {
                         </td>
 
                         {/* Created Date Column */}
-                        <td className="py-3.5 px-4 text-[#94A3B8] text-[11px] whitespace-nowrap">
+                        <td className="py-3.5 px-4 text-[#9E8E81] text-[11px] whitespace-nowrap">
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-[#94A3B8]" />
+                            <Calendar className="w-3 h-3 text-[#9E8E81]" />
                             <span>{createdDate}</span>
                           </div>
                         </td>
 
-                        {/* Status Column (Requirement 5) */}
+                        {/* Status Column */}
                         <td className="py-3.5 px-4">
                           <button
                             type="button"
@@ -322,14 +322,14 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                         </td>
 
-                        {/* Actions Column (Requirement 3) */}
+                        {/* Actions Column */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleOpenDetails(b)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#CBD5E1] hover:text-[#38BDF8] hover:bg-[#14243A] rounded-lg transition-colors cursor-pointer border border-[#20344D]"
-                              title="View full business details & architecture tier"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#DDD3CA] hover:text-[#D49B5B] hover:bg-[#2E1F15] rounded-lg transition-colors cursor-pointer border border-[#3D2B1F]"
+                              title="View full business details"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>Details</span>
@@ -338,7 +338,7 @@ export const AdminDashboard: React.FC = () => {
                               href={getInternalBusinessPath(b.slug)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#38BDF8] hover:text-[#F8FAFC] bg-[#14243A] hover:bg-[#20344D] rounded-lg transition-colors border border-[#20344D]"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#D49B5B] hover:text-[#FBF9F5] bg-[#2E1F15] hover:bg-[#3B281B] rounded-lg transition-colors border border-[#3D2B1F]"
                               title="Open public profile in new tab"
                             >
                               <span>Open</span>
@@ -356,7 +356,7 @@ export const AdminDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* MODAL: View Business Details (Requirement 3 & 4) */}
+      {/* MODAL: View Business Details */}
       {selectedBusiness && (
         <Modal
           isOpen={isDetailsModalOpen}
@@ -366,21 +366,21 @@ export const AdminDashboard: React.FC = () => {
         >
           <div className="space-y-5">
             {/* Business Header Card */}
-            <div className="flex items-center gap-3.5 p-3.5 bg-[#0B1728] rounded-2xl border border-[#20344D]">
+            <div className="flex items-center gap-3.5 p-3.5 bg-[#1B120B] rounded-2xl border border-[#3D2B1F]">
               {selectedBusiness.logo_url ? (
                 <img
                   src={selectedBusiness.logo_url}
                   alt=""
-                  className="w-12 h-12 rounded-xl object-cover border border-[#20344D] bg-[#14243A] shrink-0"
+                  className="w-12 h-12 rounded-xl object-cover border border-[#3D2B1F] bg-[#2E1F15] shrink-0"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-xl bg-[#14243A] text-[#38BDF8] border border-[#20344D] flex items-center justify-center font-bold text-lg shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F] flex items-center justify-center font-bold text-lg shrink-0">
                   {selectedBusiness.name.charAt(0)}
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[#F8FAFC] truncate">
+                  <h3 className="text-sm font-bold text-[#FBF9F5] truncate">
                     {selectedBusiness.name}
                   </h3>
                   <span
@@ -393,19 +393,19 @@ export const AdminDashboard: React.FC = () => {
                     {selectedBusiness.is_active ? 'Active' : 'Suspended'}
                   </span>
                 </div>
-                <div className="text-xs text-[#94A3B8] font-mono mt-0.5">
+                <div className="text-xs text-[#9E8E81] font-mono mt-0.5">
                   ID: {selectedBusiness.id}
                 </div>
               </div>
             </div>
 
             {/* Permanent URL Showcase */}
-            <div className="p-3 bg-[#14243A] rounded-xl border border-[#20344D] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="p-3 bg-[#2E1F15] rounded-xl border border-[#3D2B1F] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#CBD5E1]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#DDD3CA]">
                   Permanent Public URL
                 </span>
-                <div className="text-xs font-mono font-semibold text-[#38BDF8] truncate mt-0.5">
+                <div className="text-xs font-mono font-semibold text-[#D49B5B] truncate mt-0.5">
                   {getPublicBusinessUrl(selectedBusiness.slug)}
                 </div>
               </div>
@@ -423,7 +423,7 @@ export const AdminDashboard: React.FC = () => {
                   href={getInternalBusinessPath(selectedBusiness.slug)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#CBD5E1] hover:text-[#38BDF8] bg-[#0B1728] hover:bg-[#101D30] rounded-xl border border-[#20344D] shadow-xs transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#DDD3CA] hover:text-[#D49B5B] bg-[#1B120B] hover:bg-[#241810] rounded-xl border border-[#3D2B1F] shadow-xs transition-colors"
                 >
                   <span>Open Profile</span>
                   <ExternalLink className="w-3 h-3" />
@@ -433,72 +433,72 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Information Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-xl border border-[#20344D] bg-[#0B1728]">
-                <div className="flex items-center gap-1.5 text-[#94A3B8] font-semibold mb-1">
+              <div className="p-3 rounded-xl border border-[#3D2B1F] bg-[#1B120B]">
+                <div className="flex items-center gap-1.5 text-[#9E8E81] font-semibold mb-1">
                   <Mail className="w-3.5 h-3.5" />
                   <span>Account Owner Email</span>
                 </div>
-                <div className="text-[#F8FAFC] font-bold truncate">
+                <div className="text-[#FBF9F5] font-bold truncate">
                   {selectedBusiness.owner_email || selectedBusiness.email || '—'}
                 </div>
-                <div className="text-[10px] text-[#94A3B8] font-mono mt-0.5">
+                <div className="text-[10px] text-[#9E8E81] font-mono mt-0.5">
                   User ID: {selectedBusiness.user_id}
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl border border-[#20344D] bg-[#0B1728]">
-                <div className="flex items-center gap-1.5 text-[#94A3B8] font-semibold mb-1">
+              <div className="p-3 rounded-xl border border-[#3D2B1F] bg-[#1B120B]">
+                <div className="flex items-center gap-1.5 text-[#9E8E81] font-semibold mb-1">
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Registration Date</span>
                 </div>
-                <div className="text-[#F8FAFC] font-bold">
+                <div className="text-[#FBF9F5] font-bold">
                   {selectedBusiness.created_at
                     ? new Date(selectedBusiness.created_at).toLocaleString()
                     : '—'}
                 </div>
-                <div className="text-[10px] text-[#94A3B8] mt-0.5">
+                <div className="text-[10px] text-[#9E8E81] mt-0.5">
                   Last updated: {selectedBusiness.updated_at ? new Date(selectedBusiness.updated_at).toLocaleString() : '—'}
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl border border-[#20344D] bg-[#0B1728]">
-                <div className="flex items-center gap-1.5 text-[#94A3B8] font-semibold mb-1">
+              <div className="p-3 rounded-xl border border-[#3D2B1F] bg-[#1B120B]">
+                <div className="flex items-center gap-1.5 text-[#9E8E81] font-semibold mb-1">
                   <Phone className="w-3.5 h-3.5" />
                   <span>Contact Phone & City</span>
                 </div>
-                <div className="text-[#F8FAFC] font-bold">
+                <div className="text-[#FBF9F5] font-bold">
                   {selectedBusiness.phone || 'Not provided'}
                 </div>
-                <div className="text-[#94A3B8] mt-0.5">
+                <div className="text-[#9E8E81] mt-0.5">
                   {selectedBusiness.city || 'Not provided'}
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl border border-[#20344D] bg-[#0B1728]">
-                <div className="flex items-center gap-1.5 text-[#94A3B8] font-semibold mb-1">
+              <div className="p-3 rounded-xl border border-[#3D2B1F] bg-[#1B120B]">
+                <div className="flex items-center gap-1.5 text-[#9E8E81] font-semibold mb-1">
                   <Tag className="w-3.5 h-3.5" />
                   <span>Category & Address</span>
                 </div>
-                <div className="text-[#F8FAFC] font-bold">
+                <div className="text-[#FBF9F5] font-bold">
                   {selectedBusiness.category || 'Not specified'}
                 </div>
-                <div className="text-[#94A3B8] mt-0.5 truncate" title={selectedBusiness.address}>
+                <div className="text-[#9E8E81] mt-0.5 truncate" title={selectedBusiness.address}>
                   {selectedBusiness.address || 'Not provided'}
                 </div>
               </div>
             </div>
 
             {selectedBusiness.description && (
-              <div className="p-3 rounded-xl border border-[#20344D] bg-[#0B1728] text-xs">
-                <span className="font-semibold text-[#94A3B8] block mb-1">Description</span>
-                <p className="text-[#CBD5E1] leading-relaxed">{selectedBusiness.description}</p>
+              <div className="p-3 rounded-xl border border-[#3D2B1F] bg-[#1B120B] text-xs">
+                <span className="font-semibold text-[#9E8E81] block mb-1">Description</span>
+                <p className="text-[#DDD3CA] leading-relaxed">{selectedBusiness.description}</p>
               </div>
             )}
 
             {/* Status Control Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-[#20344D]">
+            <div className="flex items-center justify-between pt-3 border-t border-[#3D2B1F]">
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-[#94A3B8] font-medium">Platform status:</span>
+                <span className="text-[#9E8E81] font-medium">Platform status:</span>
                 <span className={`font-bold ${selectedBusiness.is_active ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                   {selectedBusiness.is_active ? 'Active on Web' : 'Suspended by Owner'}
                 </span>
@@ -531,4 +531,3 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-

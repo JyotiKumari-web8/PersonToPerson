@@ -9,7 +9,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#07111F]">
+      <div className="min-h-screen flex items-center justify-center bg-[#140D08]">
         <LoadingSpinner size="lg" label="Checking authentication..." />
       </div>
     );

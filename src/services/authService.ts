@@ -40,7 +40,11 @@ export const authService = {
     return localStore.getCurrentUser();
   },
 
-  async signUp(email: string, password: string, fullName: string, role: UserRole = 'business_owner') {
+  async signUp(email: string, password: string, fullName: string, _role?: UserRole) {
+    // SECURITY: Public registration must NEVER assign platform_owner or admin roles.
+    // Strictly force 'business_owner'. Elevated roles must be granted via direct database admin.
+    const assignedRole: UserRole = 'business_owner';
+
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -48,7 +52,7 @@ export const authService = {
         options: {
           data: {
             full_name: fullName,
-            role,
+            role: assignedRole,
           },
         },
       });
@@ -66,7 +70,7 @@ export const authService = {
       id: `usr-${Date.now()}`,
       email,
       full_name: fullName,
-      role,
+      role: assignedRole,
       created_at: new Date().toISOString(),
     };
 

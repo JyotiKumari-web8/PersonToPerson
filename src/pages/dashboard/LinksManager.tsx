@@ -9,8 +9,7 @@ import { LinkModal } from '@/components/business/LinkModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert } from '@/components/common/Alert';
-import { getInternalBusinessPath } from '@/lib/utils';
-import { Plus, Link2, ExternalLink, HelpCircle } from 'lucide-react';
+import { Plus, Link2, HelpCircle } from 'lucide-react';
 
 export const LinksManager: React.FC = () => {
   const { business } = useAuth();
@@ -47,16 +46,21 @@ export const LinksManager: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleSave = async (data: {
-    label: string;
-    url: string;
-    link_type: LinkType;
-    is_active: boolean;
-  }) => {
+  const handleSave = async (
+    data: {
+      label: string;
+      url: string;
+      link_type: LinkType;
+      is_active: boolean;
+    },
+    targetLinkId?: string
+  ) => {
     if (!business) return;
 
-    if (editingLink) {
-      await linkService.updateLink(editingLink.id, data);
+    const idToUpdate = targetLinkId || editingLink?.id;
+
+    if (idToUpdate) {
+      await linkService.updateLink(idToUpdate, data);
       setStatusMessage({ type: 'success', text: `Link "${data.label}" updated successfully.` });
     } else {
       await linkService.createLink({
@@ -117,24 +121,13 @@ export const LinksManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Dynamic Link Builder</h1>
-          <p className="text-xs text-[#94A3B8] mt-0.5">
-            Add custom URLs, payment buttons, booking pages, reviews, or social links. Reorder anytime.
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">Dynamic Link Builder</h1>
+          <p className="text-xs text-[#9E8E81] mt-0.5">
+            Add website, social, payment, booking, reviews, or direct contact links. Reorder anytime.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {business && (
-            <a
-              href={getInternalBusinessPath(business.slug)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" size="sm" icon={<ExternalLink className="w-4 h-4" />}>
-                Preview Live Page
-              </Button>
-            </a>
-          )}
           <Button
             variant="primary"
             size="sm"
@@ -154,10 +147,10 @@ export const LinksManager: React.FC = () => {
       )}
 
       {/* Info Tip */}
-      <div className="p-4 bg-[#14243A] rounded-2xl border border-[#20344D] flex items-start gap-3 text-xs text-[#CBD5E1] shadow-sm">
-        <HelpCircle className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
+      <div className="p-4 bg-[#241810] rounded-2xl border border-[#3D2B1F] flex items-start gap-3 text-xs text-[#DDD3CA] shadow-sm">
+        <HelpCircle className="w-4 h-4 text-[#D49B5B] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="font-bold text-[#F8FAFC]">Tip:</strong> You can add any URL you want (Stripe checkout, WhatsApp chat, Google review, appointment calendar, or custom domain). Use the up/down arrows to change the order your customers see them.
+          <strong className="font-bold text-[#FBF9F5]">Tip:</strong> Each predefined link type (e.g. Website, Instagram, WhatsApp, Maps) can be added once with its unique URL. You can reorder links using the up/down arrows to change how customers see them.
         </p>
       </div>
 
@@ -179,7 +172,7 @@ export const LinksManager: React.FC = () => {
             <EmptyState
               icon={<Link2 className="w-6 h-6" />}
               title="No links added yet"
-              description="No links added yet. Add your first link to make your profile useful for customers."
+              description="Add your official links so customers can visit your website, social pages, or contact you directly."
               action={
                 <Button
                   variant="primary"
@@ -217,8 +210,8 @@ export const LinksManager: React.FC = () => {
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
         initialLink={editingLink}
+        existingLinks={links}
       />
     </div>
   );
 };
-

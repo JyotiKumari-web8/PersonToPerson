@@ -368,3 +368,64 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_public_business_status(TEXT) TO anon, authenticated;
+
+-- ==============================================================================
+-- SUPABASE STORAGE BUCKET & RLS POLICIES FOR SPONSOR LOGOS
+-- ==============================================================================
+-- 1. Create 'sponsors' storage bucket if it does not already exist
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'sponsors',
+    'sponsors',
+    true,
+    5242880, -- 5 MB limit
+    ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']::text[]
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = true,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']::text[];
+
+-- 2. Storage RLS on storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Public read access for visitors on /b/:slug
+DROP POLICY IF EXISTS "Public can view sponsor images" ON storage.objects;
+CREATE POLICY "Public can view sponsor images"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'sponsors');
+
+-- Admins and platform owners can upload sponsor images
+DROP POLICY IF EXISTS "Admins can upload sponsor images" ON storage.objects;
+CREATE POLICY "Admins can upload sponsor images"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        bucket_id = 'sponsors' AND
+        (public.is_admin() OR public.is_platform_owner())
+    );
+
+-- Admins and platform owners can update sponsor images
+DROP POLICY IF EXISTS "Admins can update sponsor images" ON storage.objects;
+CREATE POLICY "Admins can update sponsor images"
+    ON storage.objects FOR UPDATE
+    TO authenticated
+    USING (
+        bucket_id = 'sponsors' AND
+        (public.is_admin() OR public.is_platform_owner())
+    )
+    WITH CHECK (
+        bucket_id = 'sponsors' AND
+        (public.is_admin() OR public.is_platform_owner())
+    );
+
+-- Admins and platform owners can delete sponsor images
+DROP POLICY IF EXISTS "Admins can delete sponsor images" ON storage.objects;
+CREATE POLICY "Admins can delete sponsor images"
+    ON storage.objects FOR DELETE
+    TO authenticated
+    USING (
+        bucket_id = 'sponsors' AND
+        (public.is_admin() OR public.is_platform_owner())
+    );
+

@@ -103,27 +103,27 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
   };
 
   return (
-    <div className="bg-[#101D30] rounded-2xl border border-[#20344D] p-6 flex flex-col items-center text-center shadow-lg">
+    <div className="bg-[#241810] rounded-2xl border border-[#3D2B1F] p-6 flex flex-col items-center text-center shadow-lg">
       <div className="flex items-center gap-2 mb-4 self-start sm:self-center">
-        <div className="p-1.5 rounded-xl bg-[#14243A] text-[#38BDF8] border border-[#20344D]">
+        <div className="p-1.5 rounded-xl bg-[#2E1F15] text-[#D49B5B] border border-[#3D2B1F]">
           <QrCode className="w-4 h-4" />
         </div>
-        <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">Permanent Public QR Code</h3>
+        <h3 className="text-base font-bold text-[#FDFBF7] tracking-tight">Permanent Public QR Code</h3>
       </div>
 
       {/* Development / Testing URL Switcher */}
       {isLocal && (
-        <div className="mb-4 w-full max-w-md bg-[#0B1728] border border-[#20344D] rounded-xl p-3 text-xs text-left">
+        <div className="mb-4 w-full max-w-md bg-[#1B120B] border border-[#3D2B1F] rounded-xl p-3 text-xs text-left">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="font-semibold text-[#CBD5E1]">QR Destination:</span>
-            <div className="inline-flex rounded-lg bg-[#14243A] p-0.5 border border-[#20344D]">
+            <span className="font-semibold text-[#E6D7C8]">QR Destination:</span>
+            <div className="inline-flex rounded-lg bg-[#2E1F15] p-0.5 border border-[#3D2B1F]">
               <button
                 type="button"
                 onClick={() => setUrlMode('configured')}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   urlMode === 'configured'
-                    ? 'bg-[#101D30] text-[#38BDF8] shadow-xs font-bold border border-[#20344D]'
-                    : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                    ? 'bg-[#241810] text-[#D49B5B] shadow-xs font-bold border border-[#3D2B1F]'
+                    : 'text-[#BFA08A] hover:text-[#FDFBF7]'
                 }`}
               >
                 Production Domain
@@ -133,22 +133,22 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
                 onClick={() => setUrlMode('local')}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   urlMode === 'local'
-                    ? 'bg-[#101D30] text-[#38BDF8] shadow-xs font-bold border border-[#20344D]'
-                    : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                    ? 'bg-[#241810] text-[#D49B5B] shadow-xs font-bold border border-[#3D2B1F]'
+                    : 'text-[#BFA08A] hover:text-[#FDFBF7]'
                 }`}
               >
                 Local / Network
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-[#94A3B8] leading-snug">
+          <p className="text-[11px] text-[#BFA08A] leading-snug">
             {urlMode === 'configured' ? (
-              <span className="flex items-center gap-1.5 text-[#CBD5E1]">
-                <Globe className="w-3 h-3 text-[#38BDF8] shrink-0" />
+              <span className="flex items-center gap-1.5 text-[#E6D7C8]">
+                <Globe className="w-3 h-3 text-[#D49B5B] shrink-0" />
                 Using production domain ({defaultPublicBase})
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-[#94A3B8]">
+              <span className="flex items-center gap-1.5 text-[#BFA08A]">
                 <Wifi className="w-3 h-3 text-[#22C55E] shrink-0" />
                 Using current host/network for scanning with a mobile device on the same Wi-Fi.
               </span>
@@ -160,7 +160,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
       {/* QR Code Container (Kept clean white for 100% optical readability by physical cameras) */}
       <div
         ref={qrRef}
-        className="p-5.5 bg-white rounded-2xl border-4 border-[#14243A] shadow-lg flex items-center justify-center transition-all duration-200"
+        className="p-5.5 bg-white rounded-2xl border-4 border-[#2E1F15] shadow-lg flex items-center justify-center transition-all duration-200"
       >
         <QRCodeSVG
           value={publicUrl}
@@ -168,7 +168,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
           level="H"
           includeMargin={false}
           imageSettings={{
-            src: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230ea5e9" stroke="%23ffffff" stroke-width="1.5"%3E%3Ccircle cx="12" cy="12" r="10" fill="%230ea5e9"/%3E%3Cpath d="M8 12h8m-4-4l4 4-4 4" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/%3E%3C/svg%3E',
+            src: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23d49b5b" stroke="%23ffffff" stroke-width="1.5"%3E%3Ccircle cx="12" cy="12" r="10" fill="%23d49b5b"/%3E%3Cpath d="M8 12h8m-4-4l4 4-4 4" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/%3E%3C/svg%3E',
             x: undefined,
             y: undefined,
             height: 32,
@@ -179,14 +179,14 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
       </div>
 
       {/* URL Display Box */}
-      <div className="mt-4 w-full max-w-md bg-[#0B1728] border border-[#20344D] rounded-xl p-3 flex items-center justify-between gap-2 shadow-inner">
-        <span className="text-xs font-mono text-[#38BDF8] font-semibold truncate select-all">
+      <div className="mt-4 w-full max-w-md bg-[#1B120B] border border-[#3D2B1F] rounded-xl p-3 flex items-center justify-between gap-2 shadow-inner">
+        <span className="text-xs font-mono text-[#D49B5B] font-semibold truncate select-all">
           {publicUrl}
         </span>
         <button
           type="button"
           onClick={handleCopy}
-          className="shrink-0 p-1.5 rounded-lg text-[#94A3B8] hover:text-[#38BDF8] hover:bg-[#14243A] border border-transparent hover:border-[#20344D] transition-all cursor-pointer"
+          className="shrink-0 p-1.5 rounded-lg text-[#BFA08A] hover:text-[#D49B5B] hover:bg-[#2E1F15] border border-transparent hover:border-[#3D2B1F] transition-all cursor-pointer"
           title="Copy URL"
         >
           {copied ? <Check className="w-4 h-4 text-[#22C55E]" /> : <Copy className="w-4 h-4" />}
@@ -225,26 +225,26 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
       </div>
 
       {/* Download Options */}
-      <div className="mt-4 pt-3.5 border-t border-[#20344D] flex items-center justify-center gap-3 text-xs text-[#94A3B8]">
-        <span className="font-semibold text-[#CBD5E1]">Download QR:</span>
+      <div className="mt-4 pt-3.5 border-t border-[#3D2B1F] flex items-center justify-center gap-3 text-xs text-[#BFA08A]">
+        <span className="font-semibold text-[#E6D7C8]">Download QR:</span>
         <button
           type="button"
           onClick={downloadPNG}
-          className="text-[#38BDF8] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+          className="text-[#D49B5B] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" /> High-Res PNG
         </button>
-        <span className="text-[#20344D]">•</span>
+        <span className="text-[#3D2B1F]">•</span>
         <button
           type="button"
           onClick={downloadSVG}
-          className="text-[#38BDF8] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+          className="text-[#D49B5B] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" /> Vector SVG
         </button>
       </div>
 
-      <p className="mt-3 text-[11px] text-[#94A3B8] max-w-sm leading-normal">
+      <p className="mt-3 text-[11px] text-[#BFA08A] max-w-sm leading-normal">
         Permanent destination for {businessName}. Even if you update your destination links in the future, this QR code continues directing visitors to your permanent public profile.
       </p>
     </div>

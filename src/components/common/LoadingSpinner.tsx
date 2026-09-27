@@ -20,9 +20,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3 p-8 text-[#94A3B8]', className)}>
-      <Loader2 className={cn('animate-spin text-[#0EA5E9]', sizes[size])} />
-      {label && <p className="text-xs font-semibold text-[#CBD5E1] tracking-tight">{label}</p>}
+    <div className={cn('flex flex-col items-center justify-center gap-3 p-8 text-[#9E8E81]', className)}>
+      <Loader2 className={cn('animate-spin text-[#D49B5B]', sizes[size])} />
+      {label && <p className="text-xs font-semibold text-[#DDD3CA] tracking-tight">{label}</p>}
     </div>
   );
 };

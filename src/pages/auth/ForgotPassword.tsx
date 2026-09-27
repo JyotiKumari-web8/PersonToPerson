@@ -66,7 +66,7 @@ export const ForgotPassword: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              leftAddon={<Mail className="w-4 h-4 text-[#94A3B8]" />}
+              leftAddon={<Mail className="w-4 h-4 text-[#BFA08A]" />}
             />
 
             <Button
@@ -80,10 +80,10 @@ export const ForgotPassword: React.FC = () => {
             </Button>
           </CardContent>
 
-          <CardFooter className="justify-center text-xs text-[#94A3B8] py-4 bg-[#0B1728] border-t border-[#20344D]">
+          <CardFooter className="justify-center text-xs text-[#BFA08A] py-4 bg-[#1B120B] border-t border-[#3D2B1F]">
             <Link
               to="/login"
-              className="inline-flex items-center gap-1 font-bold text-[#38BDF8] hover:underline"
+              className="inline-flex items-center gap-1 font-bold text-[#D49B5B] hover:underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to login</span>

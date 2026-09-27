@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sponsor } from '@/types';
-import { ExternalLink, Award } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 interface SponsorHeaderProps {
   sponsors: Sponsor[];
@@ -14,65 +14,64 @@ export const SponsorHeader: React.FC<SponsorHeaderProps> = ({ sponsors, onSponso
     return null;
   }
 
+  // Exactly one active sponsor strip
+  const sponsor = activeSponsors[0];
+  const hasUrl = Boolean(sponsor.website_url && sponsor.website_url.trim());
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (hasUrl) {
+      e.preventDefault();
+      onSponsorClick(sponsor.id, sponsor.website_url);
+    }
+  };
+
   return (
-    <div className="w-full bg-[#0B1728] border-b border-[#20344D] divide-y divide-[#20344D] transition-colors">
-      {activeSponsors.map((sponsor) => {
-        const hasUrl = Boolean(sponsor.website_url && sponsor.website_url.trim());
-
-        const innerContent = (
-          <div className="flex items-center justify-between w-full px-3.5 sm:px-4 py-2 gap-2 text-xs">
-            {/* Left: Official Partner badge */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#14243A] text-[#94A3B8] border border-[#20344D] text-[9.5px] font-semibold tracking-wide uppercase">
-                <Award className="w-3 h-3 text-[#0EA5E9]" />
-                <span>Partner</span>
+    <div className="w-full px-4 pt-1 pb-1 bg-[#FBF5EA]">
+      <a
+        href={hasUrl ? sponsor.website_url : '#'}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={handleClick}
+        className={`group flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg bg-[#FFFDF9] hover:bg-white border border-[#E4D2BB] hover:border-[#C8924A]/60 shadow-[0_1px_3px_rgba(43,26,18,0.04)] transition-all select-none ${
+          hasUrl ? 'cursor-pointer' : 'cursor-default'
+        }`}
+        title={hasUrl ? `Visit ${sponsor.name}` : sponsor.name}
+      >
+        <div className="flex items-center gap-2 min-w-0 pr-1.5">
+          {/* Small logo around 24–28px */}
+          <div className="w-[26px] h-[26px] rounded-md bg-white border border-[#E4D2BB] flex items-center justify-center font-bold text-[10px] text-[#2B1A12] shrink-0 overflow-hidden p-0.5 shadow-2xs">
+            {sponsor.logo_url ? (
+              <img
+                src={sponsor.logo_url}
+                alt={sponsor.name}
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                }}
+                className="w-full h-full object-contain rounded-[4px]"
+              />
+            ) : (
+              <span className="w-full h-full rounded-[4px] bg-[#3A2115] text-[#C8924A] flex items-center justify-center font-bold text-[10px]">
+                {sponsor.name.charAt(0).toUpperCase()}
               </span>
-            </div>
-
-            {/* Right: Sponsor Logo, Name & Link icon */}
-            <div className="flex items-center gap-2 min-w-0">
-              {sponsor.logo_url && (
-                <img
-                  src={sponsor.logo_url}
-                  alt=""
-                  className="w-5 h-5 rounded object-contain border border-[#20344D] bg-[#14243A] p-0.5 shrink-0"
-                />
-              )}
-              <span className="font-semibold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors truncate max-w-[140px] sm:max-w-[200px]">
-                {sponsor.name}
-              </span>
-              {hasUrl && (
-                <ExternalLink className="w-3 h-3 text-[#94A3B8] group-hover:text-[#38BDF8] transition-colors shrink-0" />
-              )}
-            </div>
+            )}
           </div>
-        );
 
-        if (hasUrl) {
-          return (
-            <a
-              key={sponsor.id}
-              href={sponsor.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => {
-                e.preventDefault();
-                onSponsorClick(sponsor.id, sponsor.website_url);
-              }}
-              className="block group hover:bg-[#101D30] transition-colors cursor-pointer"
-              title={`Visit ${sponsor.name}`}
-            >
-              {innerContent}
-            </a>
-          );
-        }
-
-        return (
-          <div key={sponsor.id} className="block">
-            {innerContent}
+          {/* Single subtle horizontal row text: small "Sponsored by" text + sponsor name slightly emphasized */}
+          <div className="flex items-center gap-1.5 text-xs truncate">
+            <span className="text-[11px] text-[#705B4D] font-normal shrink-0">
+              Sponsored by
+            </span>
+            <span className="text-[12px] font-semibold text-[#2B1A12] group-hover:text-[#4A2A1A] truncate tracking-tight">
+              {sponsor.name}
+            </span>
           </div>
-        );
-      })}
+        </div>
+
+        {/* Small external-link arrow */}
+        {hasUrl && (
+          <ExternalLink className="w-3.5 h-3.5 text-[#C8924A] group-hover:text-[#2B1A12] shrink-0 transition-colors" />
+        )}
+      </a>
     </div>
   );
 };

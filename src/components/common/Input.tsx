@@ -16,14 +16,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-1.5">
+          <label htmlFor={inputId} className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
             {label}
             {props.required && <span className="text-[#EF4444] ml-1 font-bold">*</span>}
           </label>
         )}
         <div className="relative flex items-center rounded-xl shadow-2xs">
           {leftAddon && (
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-[#94A3B8]">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-[#9E8E81]">
               {leftAddon}
             </div>
           )}
@@ -31,19 +31,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              'w-full rounded-xl border bg-[#14243A] px-3.5 py-2.5 text-sm text-[#F8FAFC] placeholder:text-[#94A3B8]/60 transition-all duration-150',
-              'focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/25 focus:border-[#0EA5E9]',
+              'w-full rounded-xl border bg-[#2E1F15] px-3.5 py-2.5 text-sm text-[#FBF9F5] placeholder:text-[#9E8E81]/60 transition-all duration-150',
+              'focus:outline-none focus:ring-2 focus:ring-[#D49B5B]/25 focus:border-[#D49B5B]',
               leftAddon ? 'pl-10' : '',
               rightAddon ? 'pr-10' : '',
               error
                 ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20 text-[#EF4444]'
-                : 'border-[#20344D] hover:border-[#38BDF8]/40',
+                : 'border-[#3D2B1F] hover:border-[#D49B5B]/40',
               className
             )}
             {...props}
           />
           {rightAddon && (
-            <div className="absolute right-3.5 flex items-center text-[#94A3B8]">
+            <div className="absolute right-3.5 flex items-center text-[#9E8E81]">
               {rightAddon}
             </div>
           )}
@@ -53,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <span>•</span> {error}
           </p>
         ) : helperText ? (
-          <p className="mt-1.5 text-xs text-[#94A3B8] leading-normal">{helperText}</p>
+          <p className="mt-1.5 text-xs text-[#9E8E81] leading-normal">{helperText}</p>
         ) : null}
       </div>
     );

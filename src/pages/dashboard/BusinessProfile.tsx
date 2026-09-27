@@ -1,45 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { businessService } from '@/services/businessService';
+import { storageService } from '@/services/storageService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Alert } from '@/components/common/Alert';
-import { getPublicBusinessUrl, getInternalBusinessPath } from '@/lib/utils';
-import { Building2, Lock, Save, ExternalLink, Image, Phone, Mail, MapPin } from 'lucide-react';
+import { getPublicBusinessUrl } from '@/lib/utils';
+import { Building2, Lock, Save, Phone, Mail, MapPin, Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 
 export const BusinessProfile: React.FC = () => {
   const { user, business, refreshBusiness } = useAuth();
 
   const [name, setName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  const [coverUrl, setCoverUrl] = useState('');
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [category, setCategory] = useState('');
-  const [city, setCity] = useState('');
   const [slug, setSlug] = useState('');
 
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (business) {
       setName(business.name || '');
       setLogoUrl(business.logo_url || '');
-      setCoverUrl(business.cover_url || '');
       setDescription(business.description || '');
       setPhone(business.phone || '');
       setEmail(business.email || '');
       setAddress(business.address || '');
-      setCategory(business.category || '');
-      setCity(business.city || '');
       setSlug(business.slug || '');
     }
   }, [business]);
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingLogo(true);
+      setErrorMessage(null);
+
+      const uploadedUrl = await storageService.uploadBusinessLogo(file);
+      setLogoUrl(uploadedUrl);
+      setSuccessMessage('Business logo uploaded successfully. Remember to save profile changes.');
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to upload logo image.');
+    } finally {
+      setIsUploadingLogo(false);
+      // Reset input value so same file can be re-selected if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,13 +88,10 @@ export const BusinessProfile: React.FC = () => {
         await businessService.updateBusiness(business.id, {
           name: trimmedName,
           logo_url: logoUrl.trim() || undefined,
-          cover_url: coverUrl.trim() || undefined,
           description: description.trim() || undefined,
           phone: phone.trim() || undefined,
           email: email.trim() || undefined,
           address: address.trim() || undefined,
-          category: category.trim() || undefined,
-          city: city.trim() || undefined,
         });
         setSuccessMessage('Business profile updated successfully! Your permanent public URL remains unchanged.');
       } else if (user) {
@@ -75,13 +100,10 @@ export const BusinessProfile: React.FC = () => {
           user_id: user.id,
           name: trimmedName,
           logo_url: logoUrl.trim() || undefined,
-          cover_url: coverUrl.trim() || undefined,
           description: description.trim() || undefined,
           phone: phone.trim() || undefined,
           email: email.trim() || undefined,
           address: address.trim() || undefined,
-          category: category.trim() || undefined,
-          city: city.trim() || undefined,
         });
         setSlug(newBiz.slug);
         setSuccessMessage('Business profile created! Your unique permanent public URL is now generated.');
@@ -100,10 +122,10 @@ export const BusinessProfile: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC] tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">
           {business ? 'Business Profile Settings' : 'Create Business Profile'}
         </h1>
-        <p className="text-xs text-[#94A3B8] mt-0.5">
+        <p className="text-xs text-[#9E8E81] mt-0.5">
           Manage your official business info. Updating your details will never break your permanent public URL.
         </p>
       </div>
@@ -115,38 +137,6 @@ export const BusinessProfile: React.FC = () => {
         <Alert type="error" title="Error" message={errorMessage} />
       )}
 
-      {/* Permanent Slug Notice */}
-      {slug && (
-        <div className="p-4.5 bg-[#0B1728] rounded-2xl border border-[#20344D] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="p-2.5 bg-[#14243A] text-[#38BDF8] border border-[#20344D] rounded-xl shrink-0">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#F8FAFC] tracking-tight">
-                  Locked Permanent Public URL
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#14243A] text-[#38BDF8] border border-[#20344D] px-2 py-0.5 rounded-full">
-                  Immutable
-                </span>
-              </div>
-              <p className="text-xs text-[#38BDF8] font-mono mt-0.5 select-all font-semibold">
-                {publicUrl}
-              </p>
-            </div>
-          </div>
-          <a
-            href={getInternalBusinessPath(slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[#CBD5E1] hover:text-[#38BDF8] bg-[#14243A] border border-[#20344D] rounded-xl hover:bg-[#101D30] shadow-sm transition-all shrink-0"
-          >
-            <span>View Public Page</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <Card>
@@ -159,7 +149,7 @@ export const BusinessProfile: React.FC = () => {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-6">
             {/* Business Name */}
             <Input
               label="Business Name"
@@ -170,64 +160,99 @@ export const BusinessProfile: React.FC = () => {
               leftAddon={<Building2 className="w-4 h-4" />}
             />
 
-            {/* Category & City */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Business Category"
-                placeholder="e.g. Restaurant, Dental, Retail, Fitness, Legal"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+            {/* Logo File Upload Interface */}
+            <div>
+              <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-2">
+                Business Logo
+              </label>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                onChange={handleLogoFileChange}
+                className="hidden"
+                id="business-logo-file-input"
               />
-              <Input
-                label="City / Location"
-                placeholder="e.g. San Francisco, CA or London, UK"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                leftAddon={<MapPin className="w-4 h-4" />}
-              />
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl bg-[#1B120B] border border-[#3D2B1F]">
+                {/* Logo Preview Square */}
+                <div className="w-20 h-20 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shrink-0 overflow-hidden relative group">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt="Business logo preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-[#9E8E81]">
+                      <ImageIcon className="w-6 h-6 stroke-[1.5]" />
+                      <span className="text-[9px] mt-1 font-medium">No Logo</span>
+                    </div>
+                  )}
+
+                  {isUploadingLogo && (
+                    <div className="absolute inset-0 bg-[#140D08]/80 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 text-[#D49B5B] animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Action & Notes */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingLogo}
+                      icon={isUploadingLogo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    >
+                      {isUploadingLogo ? 'Uploading...' : logoUrl ? 'Change Logo' : 'Upload Logo'}
+                    </Button>
+
+                    {logoUrl && !isUploadingLogo && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                        className="text-[#EF4444] hover:text-[#EF4444] hover:bg-rose-950/20"
+                        icon={<X className="w-3.5 h-3.5" />}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#9E8E81] leading-relaxed">
+                    Upload your square logo image (PNG, JPG, WebP, or SVG, up to 5 MB). This appears at the top of your mobile profile.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Short Description */}
             <div>
-              <label className="block text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-1.5">
-                Short Description / Tagline
+              <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
+                Short Description / Tagline (Optional)
               </label>
               <textarea
                 rows={3}
-                className="w-full rounded-xl border border-[#20344D] hover:border-[#38BDF8]/40 bg-[#14243A] px-3.5 py-2.5 text-sm text-[#F8FAFC] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#38BDF8]/20 focus:border-[#38BDF8] transition-all shadow-inner"
+                className="w-full rounded-xl border border-[#3D2B1F] hover:border-[#D49B5B]/40 bg-[#2E1F15] px-3.5 py-2.5 text-sm text-[#FBF9F5] placeholder:text-[#9E8E81]/60 focus:outline-none focus:ring-2 focus:ring-[#D49B5B]/25 focus:border-[#D49B5B] transition-all shadow-inner"
                 placeholder="Briefly describe what your business offers (shown on your customer profile page)..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={300}
               />
-              <p className="mt-1 text-[11px] text-[#94A3B8]">
+              <p className="mt-1 text-[11px] text-[#9E8E81]">
                 Maximum 300 characters. {300 - description.length} remaining.
               </p>
             </div>
 
-            {/* Media URLs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#20344D]">
-              <Input
-                label="Logo Image URL"
-                placeholder="https://images.yourdomain.com/logo.png"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                leftAddon={<Image className="w-4 h-4" />}
-                helperText="Square image recommended (e.g. 400x400)."
-              />
-              <Input
-                label="Cover Banner Image URL (Optional)"
-                placeholder="https://images.yourdomain.com/cover.jpg"
-                value={coverUrl}
-                onChange={(e) => setCoverUrl(e.target.value)}
-                leftAddon={<Image className="w-4 h-4" />}
-                helperText="Header banner (e.g. 1200x500)."
-              />
-            </div>
-
             {/* Contact Information */}
-            <div className="pt-3 border-t border-[#20344D]">
-              <h4 className="text-[11px] font-bold text-[#CBD5E1] uppercase tracking-wider mb-3">
+            <div className="pt-4 border-t border-[#3D2B1F]">
+              <h4 className="text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-3">
                 Customer Direct Contact
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,11 +278,11 @@ export const BusinessProfile: React.FC = () => {
               <div className="mt-4">
                 <Input
                   label="Physical Address / Street"
-                  placeholder="Street address, Suite / Floor"
+                  placeholder="e.g. 123 Main Street, Suite 400"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   leftAddon={<MapPin className="w-4 h-4" />}
-                  helperText="Enables 1-tap Google Maps directions button."
+                  helperText="Enables 1-tap Google Maps directions button for customers."
                 />
               </div>
             </div>
@@ -278,4 +303,3 @@ export const BusinessProfile: React.FC = () => {
     </div>
   );
 };
-

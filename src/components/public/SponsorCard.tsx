@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sponsor } from '@/types';
-import { ExternalLink, Award } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 interface SponsorCardProps {
   sponsor: Sponsor;
@@ -8,55 +8,52 @@ interface SponsorCardProps {
 }
 
 export const SponsorCard: React.FC<SponsorCardProps> = ({ sponsor, onSponsorClick }) => {
+  const [imgError, setImgError] = useState(false);
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     onSponsorClick(sponsor.id, sponsor.website_url);
   };
 
   return (
-    <div className="w-full mt-5 pt-4 border-t border-[#20344D]">
-      <div className="flex items-center justify-center gap-1.5 mb-2.5">
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#14243A] text-[#94A3B8] text-[9.5px] font-bold uppercase tracking-wider border border-[#20344D]">
-          <Award className="w-3 h-3 text-[#0EA5E9]" />
-          <span>Official Partner</span>
-        </span>
-      </div>
-
-      <a
-        href={sponsor.website_url}
-        onClick={handleClick}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block group p-3.5 rounded-2xl border border-[#20344D] bg-[#101D30] hover:bg-[#14243A] hover:border-[#38BDF8]/60 transition-all duration-150 cursor-pointer active:scale-[0.985] shadow-2xs"
-      >
-        <div className="flex items-center gap-3">
-          {sponsor.logo_url ? (
-            <img
-              src={sponsor.logo_url}
-              alt={sponsor.name}
-              className="w-11 h-11 rounded-xl object-contain border border-[#20344D] p-1 shrink-0 bg-[#0B1728]"
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-xl bg-[#0B1728] text-[#0EA5E9] flex items-center justify-center font-bold text-base shrink-0 border border-[#20344D]">
-              {sponsor.name.charAt(0)}
-            </div>
-          )}
-
-          <div className="min-w-0 flex-1 text-left">
-            <div className="flex items-center justify-between gap-1.5">
-              <h5 className="text-xs font-bold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors truncate tracking-tight">
-                {sponsor.name}
-              </h5>
-              <ExternalLink className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#38BDF8] transition-colors shrink-0" />
-            </div>
-            {sponsor.description && (
-              <p className="text-[11px] text-[#94A3B8] line-clamp-2 mt-0.5 leading-snug">
-                {sponsor.description}
-              </p>
-            )}
+    <a
+      href={sponsor.website_url}
+      onClick={handleClick}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block group p-3 sm:p-3.5 rounded-2xl border border-[#E4D2BB] bg-[#FAF5EA] hover:bg-[#FFFDF9] transition-all duration-150 cursor-pointer active:scale-[0.985] shadow-xs"
+    >
+      <div className="flex items-center gap-3">
+        {/* Sponsor Logo with Broken Image Protection */}
+        {sponsor.logo_url && !imgError ? (
+          <img
+            src={sponsor.logo_url}
+            alt={sponsor.name}
+            onError={() => setImgError(true)}
+            className="w-10 h-10 rounded-xl object-contain border border-[#E4D2BB] p-1 shrink-0 bg-white"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-xl bg-[#3A2115] text-[#C8924A] flex items-center justify-center font-bold text-sm shrink-0 border border-[#4A2A1A]">
+            {sponsor.name?.charAt(0) || 'S'}
           </div>
+        )}
+
+        <div className="min-w-0 flex-1 text-left">
+          <div className="flex items-center justify-between gap-1.5">
+            <h5 className="text-xs sm:text-[13px] font-bold text-[#2B1A12] group-hover:text-[#4A2A1A] transition-colors truncate tracking-tight">
+              {sponsor.name}
+            </h5>
+            <div className="w-6 h-6 rounded-lg border border-[#E4D2BB] bg-white flex items-center justify-center text-[#705B4D] group-hover:text-[#2B1A12] transition-colors shrink-0 shadow-2xs">
+              <ExternalLink className="w-3 h-3" />
+            </div>
+          </div>
+          {sponsor.description && (
+            <p className="text-[11px] text-[#705B4D] line-clamp-1 mt-0.5 leading-snug">
+              {sponsor.description}
+            </p>
+          )}
         </div>
-      </a>
-    </div>
+      </div>
+    </a>
   );
 };
