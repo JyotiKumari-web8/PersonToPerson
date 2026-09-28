@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { linkService } from '@/services/linkService';
-import { BusinessLink, LinkType } from '@/types';
+import { BusinessLink, LinkType, BusinessSubscriptionDetails } from '@/types';
+import { planService } from '@/services/planService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { LinkItemRow } from '@/components/business/LinkItemRow';
@@ -9,31 +10,36 @@ import { LinkModal } from '@/components/business/LinkModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert } from '@/components/common/Alert';
-import { Plus, Link2, HelpCircle } from 'lucide-react';
+import { Plus, Link2, HelpCircle, AlertCircle } from 'lucide-react';
 
 export const LinksManager: React.FC = () => {
   const { business } = useAuth();
   const [links, setLinks] = useState<BusinessLink[]>([]);
+  const [subscription, setSubscription] = useState<BusinessSubscriptionDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<BusinessLink | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadLinks = async () => {
+  const loadData = async () => {
     if (!business) return;
     try {
       setIsLoading(true);
-      const data = await linkService.getLinksByBusinessId(business.id);
-      setLinks(data);
+      const [linksData, subData] = await Promise.all([
+        linkService.getLinksByBusinessId(business.id),
+        planService.getSubscriptionByBusinessId(business.id),
+      ]);
+      setLinks(linksData);
+      setSubscription(subData);
     } catch (err) {
-      console.error('Failed to load links:', err);
+      console.error('Failed to load links data:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadLinks();
+    loadData();
   }, [business]);
 
   const handleOpenAdd = () => {
@@ -70,14 +76,14 @@ export const LinksManager: React.FC = () => {
       setStatusMessage({ type: 'success', text: `Link "${data.label}" created successfully.` });
     }
 
-    await loadLinks();
+      await loadData();
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
   const handleDelete = async (id: string) => {
     try {
       await linkService.deleteLink(id);
-      setLinks((prev) => prev.filter((l) => l.id !== id));
+      await loadData();
       setStatusMessage({ type: 'success', text: 'Link deleted successfully.' });
       setTimeout(() => setStatusMessage(null), 4000);
     } catch {
@@ -88,11 +94,13 @@ export const LinksManager: React.FC = () => {
   const handleToggleActive = async (id: string, active: boolean) => {
     try {
       await linkService.updateLink(id, { is_active: active });
-      setLinks((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, is_active: active } : l))
-      );
-    } catch {
-      setStatusMessage({ type: 'error', text: 'Failed to update link status.' });
+      await loadData();
+    } catch (err: unknown) {
+      setStatusMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to update link status.',
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
     }
   };
 
@@ -113,15 +121,24 @@ export const LinksManager: React.FC = () => {
       await linkService.reorderLinks(business.id, orderedIds);
     } catch (err) {
       console.error('Failed to save reordered links:', err);
-      await loadLinks();
+      await loadData();
     }
   };
+
+  const activeCount = links.filter((l) => l.is_active).length;
+  const maxLinks = subscription?.max_links ?? 3;
+  const isLimitReached = activeCount >= maxLinks;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">Dynamic Link Builder</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">Dynamic Link Builder</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#241810] text-[#D49B5B] border border-[#3D2B1F]">
+              {subscription?.plan_name || 'Free'} Plan ({activeCount}/{maxLinks} links)
+            </span>
+          </div>
           <p className="text-xs text-[#9E8E81] mt-0.5">
             Add website, social, payment, booking, reviews, or direct contact links. Reorder anytime.
           </p>
@@ -146,22 +163,35 @@ export const LinksManager: React.FC = () => {
         />
       )}
 
-      {/* Info Tip */}
-      <div className="p-4 bg-[#241810] rounded-2xl border border-[#3D2B1F] flex items-start gap-3 text-xs text-[#DDD3CA] shadow-sm">
-        <HelpCircle className="w-4 h-4 text-[#D49B5B] shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong className="font-bold text-[#FBF9F5]">Tip:</strong> Each predefined link type (e.g. Website, Instagram, WhatsApp, Maps) can be added once with its unique URL. You can reorder links using the up/down arrows to change how customers see them.
-        </p>
-      </div>
+      {/* Plan Limit Banner if full */}
+      {isLimitReached && (
+        <div className="p-4 bg-amber-950/30 rounded-2xl border border-amber-800/50 flex items-center justify-between gap-3 text-xs text-amber-200 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              You have reached your <strong>{subscription?.plan_name || 'Free'}</strong> plan limit of{' '}
+              <strong>{maxLinks} active links</strong>.
+            </span>
+          </div>
+          <span className="text-[11px] text-[#D49B5B] font-semibold shrink-0">
+            Contact Admin to upgrade &rsaquo;
+          </span>
+        </div>
+      )}
 
       {/* Links List */}
       <Card>
         <CardHeader>
-          <div>
-            <CardTitle>Configured Links ({links.length})</CardTitle>
-            <CardDescription>
-              {links.filter((l) => l.is_active).length} active link(s) displayed to visitors
-            </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Configured Links ({links.length})</CardTitle>
+              <CardDescription>
+                {activeCount} of {maxLinks} active link(s) displayed to visitors
+              </CardDescription>
+            </div>
+            <span className="text-xs font-mono font-bold text-[#D49B5B] bg-[#1B120B] px-3 py-1 rounded-xl border border-[#3D2B1F]">
+              {activeCount} / {maxLinks} Active
+            </span>
           </div>
         </CardHeader>
 
@@ -211,6 +241,8 @@ export const LinksManager: React.FC = () => {
         onSave={handleSave}
         initialLink={editingLink}
         existingLinks={links}
+        maxLinks={maxLinks}
+        planName={subscription?.plan_name}
       />
     </div>
   );

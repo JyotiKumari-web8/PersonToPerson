@@ -28,15 +28,37 @@ interface PublicProfileViewProps {
 
 // Dynamic responsive column span calculation based on total active link count
 const getTileColSpan = (index: number, totalCount: number): string => {
-  if (totalCount === 1) return 'col-span-6';
-  if (totalCount === 2) return 'col-span-3';
-  if (totalCount === 3) return 'col-span-2';
-  if (totalCount === 4) return 'col-span-3'; // 2x2 grid
+  // 1 link: Compact centered tile, never full-width
+  if (totalCount === 1) return 'col-span-4 col-start-2 sm:col-span-2 sm:col-start-3';
 
+  // 2 links: Two balanced tiles
+  if (totalCount === 2) return 'col-span-3';
+
+  // 3 links: Three balanced tiles
+  if (totalCount === 3) return 'col-span-2';
+
+  // 4 links: 2 x 2 balanced grid
+  if (totalCount === 4) return 'col-span-3';
+
+  // 5 links: 3 in row 1, 2 balanced in row 2
+  if (totalCount === 5) {
+    return index < 3 ? 'col-span-2' : 'col-span-3';
+  }
+
+  // 6 links: 3 + 3
+  if (totalCount === 6) return 'col-span-2';
+
+  // 7 links: 3 + 3 + 1 (The seventh tile is centered and NEVER full-width)
+  if (totalCount === 7) {
+    if (index === 6) return 'col-span-2 col-start-3';
+    return 'col-span-2';
+  }
+
+  // 8 or more links: dynamically balanced rows
   const remainder = totalCount % 3;
   if (remainder === 0) return 'col-span-2';
   if (remainder === 1) {
-    if (index === totalCount - 1) return 'col-span-6';
+    if (index === totalCount - 1) return 'col-span-2 col-start-3';
     return 'col-span-2';
   }
   if (remainder === 2) {
@@ -308,7 +330,6 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
                 {activeLinks.map((link, index) => {
                   const colSpan = getTileColSpan(index, activeLinks.length);
                   const sizeVariant = getTileSizeVariant(activeLinks.length);
-                  const isFullSpan = colSpan === 'col-span-6' && activeLinks.length > 1;
 
                   return (
                     <div key={link.id} className={colSpan}>
@@ -316,7 +337,6 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
                         link={link}
                         onLinkClick={onLinkClick}
                         sizeVariant={sizeVariant}
-                        isFullSpan={isFullSpan}
                       />
                     </div>
                   );

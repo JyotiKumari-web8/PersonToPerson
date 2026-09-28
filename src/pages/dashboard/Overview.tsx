@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { linkService } from '@/services/linkService';
 import { analyticsService } from '@/services/analyticsService';
-import { BusinessLink, AnalyticsSummary } from '@/types';
+import { BusinessLink, AnalyticsSummary, BusinessSubscriptionDetails } from '@/types';
+import { planService } from '@/services/planService';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { LINK_TYPE_CONFIG } from '@/components/business/linkIcons';
@@ -25,6 +26,7 @@ import { Link } from 'react-router-dom';
 export const Overview: React.FC = () => {
   const { business, isAdmin, isPlatformOwner } = useAuth();
   const [links, setLinks] = useState<BusinessLink[]>([]);
+  const [subscription, setSubscription] = useState<BusinessSubscriptionDetails | null>(null);
   const [summary, setSummary] = useState<AnalyticsSummary>({
     totalVisits: 0,
     totalClicks: 0,
@@ -39,12 +41,14 @@ export const Overview: React.FC = () => {
       if (!business) return;
       try {
         setIsLoading(true);
-        const [linksData, analyticsData] = await Promise.all([
+        const [linksData, analyticsData, subData] = await Promise.all([
           linkService.getLinksByBusinessId(business.id),
           analyticsService.getAnalyticsSummary(business.id, '7days'),
+          planService.getSubscriptionByBusinessId(business.id),
         ]);
         setLinks(linksData);
         setSummary(analyticsData);
+        setSubscription(subData);
       } catch (err) {
         console.error('Failed to load overview data:', err);
       } finally {
@@ -82,9 +86,22 @@ export const Overview: React.FC = () => {
       {/* Welcome & Quick Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">
-            Welcome back, {business.name}
-          </h1>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">
+              Welcome back, {business.name}
+            </h1>
+            {subscription && (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
+                  subscription.is_free
+                    ? 'bg-[#2E1F15] text-[#D49B5B] border-[#D49B5B]/30'
+                    : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
+                }`}
+              >
+                {subscription.plan_name}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-[#9E8E81] mt-0.5">
             Live overview of your permanent business profile and link performance.
           </p>
@@ -130,8 +147,17 @@ export const Overview: React.FC = () => {
               <Link2 className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight">{activeLinksCount}</div>
-          <span className="text-[11px] text-[#9E8E81] font-medium">of {links.length} total links</span>
+          <div className="mt-3 text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight flex items-baseline gap-1.5">
+            <span>{activeLinksCount}</span>
+            {subscription && (
+              <span className="text-xs font-normal text-[#9E8E81] font-mono">
+                / {subscription.max_links}
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] text-[#9E8E81] font-medium">
+            {subscription ? `${subscription.max_links - activeLinksCount} available` : `of ${links.length} total links`}
+          </span>
         </div>
 
         <div className="bg-[#241810] p-5 rounded-2xl border border-[#3D2B1F] shadow-sm hover:border-[#D49B5B]/40 transition-all">

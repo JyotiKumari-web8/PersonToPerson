@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navbar } from './Navbar';
-import { ShieldAlert, Building2, Award } from 'lucide-react';
+import { ShieldAlert, Building2, Award, CreditCard } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface AdminLayoutProps {
@@ -12,6 +12,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const navItems = [
     { name: 'All Businesses', path: '/admin', icon: Building2 },
+    { name: 'Plans & Subscriptions', path: '/admin/subscriptions', icon: CreditCard },
     { name: 'Sponsors Management', path: '/admin/sponsors', icon: Award },
   ];
 

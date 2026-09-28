@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Alert } from '@/components/common/Alert';
+import { SubscriptionOverviewCard } from '@/components/business/SubscriptionOverviewCard';
 import { KeyRound, User, Mail, ShieldCheck } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
@@ -48,11 +49,14 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-[#FDFBF7] tracking-tight">Account Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-[#FDFBF7] tracking-tight">Account & Subscription</h1>
         <p className="text-xs text-[#BFA08A] mt-0.5">
-          Manage your account credentials, security preferences, and authentication details.
+          View your assigned plan limits, usage, credentials, and authentication details.
         </p>
       </div>
+
+      {/* Subscription Card */}
+      <SubscriptionOverviewCard />
 
       {/* Account Info Card */}
       <Card>

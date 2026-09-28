@@ -36,10 +36,71 @@ export interface Business {
   owner_email?: string;
   owner_name?: string;
 
-  // Future-ready architectural fields for subscription/trial tiers (Requirement 4)
-  subscription_status?: 'trialing' | 'active' | 'past_due' | 'canceled' | 'lifetime';
-  trial_ends_at?: string | null;
-  subscription_tier?: 'free' | 'starter' | 'pro' | 'enterprise';
+  // Subscription association
+  subscription?: Subscription;
+}
+
+export type BillingInterval = 'monthly' | 'yearly' | 'lifetime' | 'custom';
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'past_due';
+
+export interface PlanLimits {
+  max_links?: number;
+  analytics_tier?: 'basic' | 'standard' | 'advanced';
+  custom_branding?: boolean;
+  qr_customization?: boolean;
+  sponsor_enabled?: boolean;
+  [key: string]: unknown;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  description?: string;
+  is_free: boolean;
+  price: number;
+  currency: string;
+  billing_interval: BillingInterval;
+  duration_days?: number | null;
+  features: string[];
+  limits: PlanLimits;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Subscription {
+  id: string;
+  business_id: string;
+  plan_id: string;
+  status: SubscriptionStatus;
+  start_date: string;
+  expires_at?: string | null;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  plan?: Plan;
+  business?: { id: string; name: string; slug: string; user_id?: string; owner_email?: string };
+}
+
+export interface BusinessSubscriptionDetails {
+  subscription_id?: string | null;
+  business_id: string;
+  status: SubscriptionStatus;
+  start_date: string;
+  expires_at?: string | null;
+  notes?: string;
+  plan_id: string;
+  plan_name: string;
+  plan_description?: string;
+  is_free: boolean;
+  price: number;
+  currency: string;
+  billing_interval: BillingInterval;
+  features: string[];
+  limits: PlanLimits;
+  max_links: number;
+  active_links_count: number;
 }
 
 export type LinkType =

@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { BusinessLink, LinkType } from '@/types';
 import { localStore } from './store';
 import { normalizeUrl } from '@/lib/utils';
+import { planService } from './planService';
 
 export const linkService = {
   async getLinksByBusinessId(businessId: string, activeOnly: boolean = false): Promise<BusinessLink[]> {
@@ -51,6 +52,23 @@ export const linkService = {
           url: cleanedUrl,
           is_active: payload.is_active ?? true,
         });
+      }
+    }
+
+    // Proactive Plan Limits check for instant feedback
+    const willBeActive = payload.is_active ?? true;
+    if (willBeActive) {
+      try {
+        const sub = await planService.getSubscriptionByBusinessId(payload.business_id);
+        if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
+          throw new Error(
+            `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
+          );
+        }
+      } catch (subErr: any) {
+        if (subErr?.message?.includes('Plan limit reached')) {
+          throw subErr;
+        }
       }
     }
 
@@ -104,6 +122,38 @@ export const linkService = {
 
     if (cleanUpdates.label) {
       cleanUpdates.label = cleanUpdates.label.trim();
+    }
+
+    // If reactivating a link, check plan limits
+    if (cleanUpdates.is_active === true) {
+      try {
+        let currentBizId: string | null = null;
+        let wasActive = true;
+        if (isSupabaseConfigured) {
+          const { data: linkRec } = await supabase.from('business_links').select('business_id, is_active').eq('id', id).maybeSingle();
+          if (linkRec) {
+            currentBizId = linkRec.business_id;
+            wasActive = Boolean(linkRec.is_active);
+          }
+        } else {
+          const localL = localStore.getLinks().find((l) => l.id === id);
+          if (localL) {
+            currentBizId = localL.business_id;
+            wasActive = localL.is_active;
+          }
+        }
+
+        if (currentBizId && !wasActive) {
+          const sub = await planService.getSubscriptionByBusinessId(currentBizId);
+          if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
+            throw new Error(
+              `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
+            );
+          }
+        }
+      } catch (err: any) {
+        if (err?.message?.includes('Plan limit reached')) throw err;
+      }
     }
 
     if (isSupabaseConfigured) {

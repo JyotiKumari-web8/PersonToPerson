@@ -5,6 +5,8 @@ import {
   Sponsor,
   BusinessSponsor,
   UserProfile,
+  Plan,
+  Subscription,
 } from '@/types';
 import {
   INITIAL_USER,
@@ -13,6 +15,8 @@ import {
   INITIAL_SPONSORS,
   INITIAL_BUSINESS_SPONSORS,
   INITIAL_ANALYTICS,
+  INITIAL_PLANS,
+  INITIAL_SUBSCRIPTIONS,
 } from '@/lib/mockData';
 
 const STORAGE_KEYS = {
@@ -23,6 +27,8 @@ const STORAGE_KEYS = {
   SPONSORS: 'p2p_sponsors',
   BUSINESS_SPONSORS: 'p2p_business_sponsors',
   ANALYTICS: 'p2p_analytics',
+  PLANS: 'p2p_plans',
+  SUBSCRIPTIONS: 'p2p_subscriptions',
 };
 
 // Helper for local storage read/write
@@ -153,5 +159,41 @@ export const localStore = {
     const events = this.getAnalytics();
     events.push(event);
     this.saveAnalytics(events);
+  },
+
+  getPlans(): Plan[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PLANS);
+    if (!raw) {
+      const initial = [...INITIAL_PLANS];
+      localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(initial));
+      return initial;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [...INITIAL_PLANS];
+    }
+  },
+
+  savePlans(plans: Plan[]) {
+    localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
+  },
+
+  getSubscriptions(): Subscription[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTIONS);
+    if (!raw) {
+      const initial = [...INITIAL_SUBSCRIPTIONS];
+      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(initial));
+      return initial;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [...INITIAL_SUBSCRIPTIONS];
+    }
+  },
+
+  saveSubscriptions(subscriptions: Subscription[]) {
+    localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(subscriptions));
   },
 };

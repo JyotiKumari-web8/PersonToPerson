@@ -5,7 +5,7 @@ import { Input } from '@/components/common/Input';
 import { BusinessLink, LinkType } from '@/types';
 import { LINK_TYPE_CONFIG } from './linkIcons';
 import { isValidUrl } from '@/lib/utils';
-import { AlertCircle, Check, Pencil } from 'lucide-react';
+import { AlertCircle, Check, ArrowUpRight, Sparkles } from 'lucide-react';
 
 interface LinkModalProps {
   isOpen: boolean;
@@ -21,25 +21,70 @@ interface LinkModalProps {
   ) => Promise<void>;
   initialLink?: BusinessLink | null;
   existingLinks?: BusinessLink[];
+  maxLinks?: number;
+  planName?: string;
 }
 
-const PREDEFINED_TYPES: LinkType[] = [
-  'website',
-  'instagram',
-  'youtube',
-  'facebook',
-  'whatsapp',
-  'google_maps',
-  'google_review',
-  'payment',
-  'booking',
-  'call',
-  'email',
-  'menu',
-  'admission',
-  'portfolio',
-  'custom',
+// Exact list requested by user
+const ORDERED_PLATFORMS: { type: LinkType; label: string; shortLabel: string }[] = [
+  { type: 'instagram', label: 'Instagram', shortLabel: 'Instagram' },
+  { type: 'whatsapp', label: 'WhatsApp', shortLabel: 'WhatsApp' },
+  { type: 'facebook', label: 'Facebook', shortLabel: 'Facebook' },
+  { type: 'youtube', label: 'YouTube', shortLabel: 'YouTube' },
+  { type: 'website', label: 'Website', shortLabel: 'Website' },
+  { type: 'google_review', label: 'Google Review', shortLabel: 'Google Review' },
+  { type: 'google_maps', label: 'Google Maps', shortLabel: 'Google Maps' },
+  { type: 'payment', label: 'Payment', shortLabel: 'Payment' },
+  { type: 'booking', label: 'Booking', shortLabel: 'Booking' },
+  { type: 'menu', label: 'Menu', shortLabel: 'Menu' },
+  { type: 'portfolio', label: 'Portfolio', shortLabel: 'Portfolio' },
+  { type: 'admission', label: 'Admission Form', shortLabel: 'Admission Form' },
+  { type: 'custom', label: 'Other', shortLabel: 'Other' },
 ];
+
+/**
+ * Smart URL Detector: Recognizes platform from pasted URL
+ */
+function detectPlatformFromUrl(inputUrl: string): { type: LinkType; defaultLabel: string } | null {
+  const url = inputUrl.trim().toLowerCase();
+  if (!url) return null;
+
+  if (url.includes('instagram.com') || url.includes('instagr.am')) {
+    return { type: 'instagram', defaultLabel: 'Instagram' };
+  }
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    return { type: 'youtube', defaultLabel: 'YouTube' };
+  }
+  if (url.includes('wa.me') || url.includes('whatsapp.com') || url.includes('api.whatsapp.com')) {
+    return { type: 'whatsapp', defaultLabel: 'WhatsApp' };
+  }
+  if (url.includes('facebook.com') || url.includes('fb.watch') || url.includes('fb.me')) {
+    return { type: 'facebook', defaultLabel: 'Facebook' };
+  }
+  if (url.includes('goo.gl/maps') || url.includes('maps.google.com') || url.includes('google.com/maps')) {
+    return { type: 'google_maps', defaultLabel: 'Google Maps' };
+  }
+  if (url.includes('g.page') || url.includes('writereview') || (url.includes('google.com') && url.includes('review'))) {
+    return { type: 'google_review', defaultLabel: 'Google Review' };
+  }
+  if (url.includes('paypal.me') || url.includes('stripe.com') || url.includes('razorpay') || url.includes('cash.app')) {
+    return { type: 'payment', defaultLabel: 'Payment' };
+  }
+  if (url.includes('calendly.com') || url.includes('cal.com') || url.includes('booking')) {
+    return { type: 'booking', defaultLabel: 'Booking' };
+  }
+  if (url.includes('menu') || url.includes('zomato.com') || url.includes('swiggy.com')) {
+    return { type: 'menu', defaultLabel: 'Menu' };
+  }
+  if (url.includes('portfolio') || url.includes('behance.net') || url.includes('dribbble.com')) {
+    return { type: 'portfolio', defaultLabel: 'Portfolio' };
+  }
+  if (url.includes('docs.google.com/forms') || url.includes('typeform.com') || url.includes('admission')) {
+    return { type: 'admission', defaultLabel: 'Admission Form' };
+  }
+
+  return null;
+}
 
 export const LinkModal: React.FC<LinkModalProps> = ({
   isOpen,
@@ -47,23 +92,24 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   onSave,
   initialLink,
   existingLinks = [],
+  maxLinks,
+  planName = 'Free',
 }) => {
-  const [linkType, setLinkType] = useState<LinkType>('website');
-  const [label, setLabel] = useState('');
+  const [linkType, setLinkType] = useState<LinkType>('instagram');
   const [url, setUrl] = useState('');
+  const [label, setLabel] = useState('Instagram');
   const [isActive, setIsActive] = useState(true);
-  const [activeTargetId, setActiveTargetId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Independent URL drafts per link type to prevent carrying over URLs
+  // Stored drafts per platform
   const [draftUrls, setDraftUrls] = useState<Partial<Record<LinkType, string>>>({});
 
-  // Helper to find if a predefined link type already has an existing link record
-  const findExistingByType = (type: LinkType): BusinessLink | undefined => {
-    if (type === 'custom') return undefined;
-    return existingLinks.find((l) => l.link_type === type);
-  };
+  // Check if limit is reached for adding new active links
+  const activeLinksCount = existingLinks.filter((l) => l.is_active).length;
+  const isLimitReached = Boolean(
+    !initialLink && maxLinks && maxLinks > 0 && activeLinksCount >= maxLinks
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -72,94 +118,85 @@ export const LinkModal: React.FC<LinkModalProps> = ({
 
     if (initialLink) {
       setLinkType(initialLink.link_type);
-      setLabel(initialLink.label);
       setUrl(initialLink.url);
+      setLabel(initialLink.label);
       setIsActive(initialLink.is_active);
-      setActiveTargetId(initialLink.id);
       setDraftUrls((prev) => ({ ...prev, [initialLink.link_type]: initialLink.url }));
     } else {
-      // Find the first available unused link type, or default to 'website'
-      const firstAvailable =
-        PREDEFINED_TYPES.find((t) => t !== 'custom' && !existingLinks.some((l) => l.link_type === t)) ||
-        'website';
+      // Find first unused platform or default to Instagram
+      const unused = ORDERED_PLATFORMS.find(
+        (p) => p.type !== 'custom' && !existingLinks.some((l) => l.link_type === p.type)
+      );
+      const chosenType = unused ? unused.type : 'instagram';
+      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === chosenType)?.label || 'Instagram';
 
-      const existingForFirst = findExistingByType(firstAvailable);
-
-      setLinkType(firstAvailable);
-      if (existingForFirst) {
-        setLabel(existingForFirst.label);
-        setUrl(existingForFirst.url);
-        setIsActive(existingForFirst.is_active);
-        setActiveTargetId(existingForFirst.id);
-      } else {
-        setLabel(LINK_TYPE_CONFIG[firstAvailable].defaultLabel);
-        setUrl('');
-        setIsActive(true);
-        setActiveTargetId(null);
-      }
+      setLinkType(chosenType);
+      setUrl('');
+      setLabel(defaultLbl);
+      setIsActive(true);
     }
   }, [initialLink, isOpen]);
 
-  const handleTypeSelect = (selectedType: LinkType) => {
-    // 1. Save current URL draft for previous linkType if we weren't editing an existing link
-    if (!activeTargetId && url) {
+  // Handle manual platform button tap
+  const handleSelectPlatform = (type: LinkType, defaultLbl: string) => {
+    // Save draft for previous type
+    if (url) {
       setDraftUrls((prev) => ({ ...prev, [linkType]: url }));
     }
 
-    setLinkType(selectedType);
+    setLinkType(type);
     setError(null);
 
-    // 2. Check if selected type is already added
-    const existing = findExistingByType(selectedType);
+    // If user hasn't edited label or it equals previous default, update to new default
+    const prevDefault = ORDERED_PLATFORMS.find((p) => p.type === linkType)?.label;
+    if (!label || label === prevDefault) {
+      setLabel(defaultLbl);
+    }
 
-    if (existing) {
-      // Mode: EDIT existing link for this type
-      setActiveTargetId(existing.id);
-      setLabel(existing.label);
-      setUrl(existing.url);
-      setIsActive(existing.is_active);
-    } else {
-      // Mode: ADD new link for this type
-      setActiveTargetId(null);
-      setLabel(LINK_TYPE_CONFIG[selectedType].defaultLabel);
-      // Independent URL: use stored draft for this type, NEVER carry over another type's URL
-      setUrl(draftUrls[selectedType] || '');
-      setIsActive(true);
+    // Load draft for this type if present
+    if (draftUrls[type]) {
+      setUrl(draftUrls[type]!);
     }
   };
 
-  const handleUrlChange = (newUrl: string) => {
-    setUrl(newUrl);
-    setDraftUrls((prev) => ({ ...prev, [linkType]: newUrl }));
+  // Smart URL input handler
+  const handleUrlInput = (rawVal: string) => {
+    setUrl(rawVal);
+    setError(null);
+    setDraftUrls((prev) => ({ ...prev, [linkType]: rawVal }));
+
+    // Run smart URL detection on paste/type
+    const detected = detectPlatformFromUrl(rawVal);
+    if (detected && detected.type !== linkType) {
+      setLinkType(detected.type);
+      // Auto-fill label if current label was default or empty
+      const prevDefault = ORDERED_PLATFORMS.find((p) => p.type === linkType)?.label;
+      if (!label || label === prevDefault) {
+        setLabel(detected.defaultLabel);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const trimmedLabel = label.trim();
     const trimmedUrl = url.trim();
-
-    if (!trimmedLabel) {
-      setError('Please provide a descriptive button label.');
-      return;
-    }
+    const trimmedLabel = label.trim();
 
     if (!trimmedUrl) {
-      setError('Please enter a destination URL.');
+      setError('Please enter a valid link.');
       return;
     }
 
+    if (!trimmedLabel) {
+      setError('Please enter a label for this link.');
+      return;
+    }
+
+    // Friendly URL validation
     if (!isValidUrl(trimmedUrl, linkType)) {
-      if (linkType === 'whatsapp') {
-        setError('Please enter a valid phone number (with country code) or a wa.me URL.');
-      } else if (linkType === 'call') {
-        setError('Please enter a valid phone number.');
-      } else if (linkType === 'email') {
-        setError('Please enter a valid email address.');
-      } else {
-        setError('Please enter a valid web URL (e.g. https://yourbusiness.com).');
-      }
+      setError('Please enter a valid link.');
       return;
     }
 
@@ -167,178 +204,135 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setIsSubmitting(true);
       await onSave(
         {
-          label: trimmedLabel,
-          url: trimmedUrl,
           link_type: linkType,
+          url: trimmedUrl,
+          label: trimmedLabel,
           is_active: isActive,
         },
-        activeTargetId || undefined
+        initialLink?.id
       );
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred while saving the link.');
+      console.error('Failed to save link:', err);
+      setError(
+        err instanceof Error && err.message.includes('Plan limit')
+          ? err.message
+          : 'Please enter a valid link.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentConfig = LINK_TYPE_CONFIG[linkType];
-  const isEditingExisting = Boolean(activeTargetId);
+  const selectedPlatformCfg = ORDERED_PLATFORMS.find((p) => p.type === linkType) || ORDERED_PLATFORMS[0];
+  const iconCfg = LINK_TYPE_CONFIG[linkType] || LINK_TYPE_CONFIG.custom;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditingExisting ? `Edit ${currentConfig.label}` : 'Add New Link'}
-      description={
-        isEditingExisting
-          ? `Editing existing ${currentConfig.label} link. Changes will update immediately on your public page.`
-          : 'Choose a link type and enter your destination. Each predefined type can only be added once.'
-      }
-      maxWidth="lg"
+      title={initialLink ? 'Edit Link' : 'Add Link'}
+      description="Select platform, paste destination URL, and save."
+      maxWidth="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="flex items-center gap-2 p-3 text-xs bg-rose-950/40 text-rose-300 border border-rose-800/60 rounded-xl leading-relaxed">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span className="font-medium">{error}</span>
+            <span className="font-semibold">{error}</span>
           </div>
         )}
 
-        {/* Visual Selectable Link Cards */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider">
-              Select Link Type
-            </label>
-            <span className="text-[11px] text-[#9E8E81]">
-              {isEditingExisting ? 'Editing already added link' : 'Select a type to add'}
-            </span>
+        {/* Plan Limit Warning */}
+        {isLimitReached && (
+          <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-200 space-y-1">
+            <div className="font-bold flex items-center gap-1.5 text-amber-400">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>Plan Limit Reached ({activeLinksCount} / {maxLinks})</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[#DDD3CA]">
+              Your current <strong className="text-[#FBF9F5]">{planName}</strong> plan allows up to{' '}
+              {maxLinks} active links. Contact Admin to upgrade your plan.
+            </p>
           </div>
+        )}
+
+        {/* Step 1: Select Platform — Large, Mobile-First Touch Targets */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-2">
+            1. Select Platform
+          </label>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
-            {PREDEFINED_TYPES.map((type) => {
-              const cfg = LINK_TYPE_CONFIG[type];
-              const isSelected = linkType === type;
-              const existingRecord = findExistingByType(type);
-              const isAlreadyAdded = Boolean(existingRecord);
+            {ORDERED_PLATFORMS.map((platform) => {
+              const isSelected = linkType === platform.type;
+              const cfg = LINK_TYPE_CONFIG[platform.type] || LINK_TYPE_CONFIG.custom;
+              const isAlreadyAdded = existingLinks.some(
+                (l) => l.link_type === platform.type && l.id !== initialLink?.id
+              );
 
               return (
                 <button
-                  key={type}
+                  key={platform.type}
                   type="button"
-                  onClick={() => handleTypeSelect(type)}
-                  className={`flex flex-col justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer relative min-h-[64px] ${
+                  onClick={() => handleSelectPlatform(platform.type, platform.label)}
+                  className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer min-h-[48px] select-none ${
                     isSelected
-                      ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs'
-                      : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/40 hover:bg-[#241810]'
+                      ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs font-bold'
+                      : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/50 hover:bg-[#241810]'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className={cfg.colorClass}>{cfg.icon({ className: 'w-4 h-4' })}</span>
-                    <span className="text-xs font-bold truncate">{cfg.label}</span>
+                  <div className="shrink-0">
+                    {cfg.icon({ className: 'w-4 h-4 text-[#D49B5B]' })}
                   </div>
 
-                  <div className="mt-1 flex items-center justify-between gap-1">
-                    {isAlreadyAdded ? (
-                      <span className="inline-flex items-center gap-1 text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-950/50 text-[#22C55E] border border-emerald-800/50">
-                        {isSelected ? (
-                          <>
-                            <Pencil className="w-2.5 h-2.5" />
-                            <span>Editing</span>
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-2.5 h-2.5" />
-                            <span>Already Added</span>
-                          </>
-                        )}
-                      </span>
-                    ) : (
-                      <span className="text-[9.5px] text-[#9E8E81]">Available</span>
-                    )}
-
-                    {isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#D49B5B]" />
-                    )}
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs truncate block">{platform.shortLabel}</span>
                   </div>
+
+                  {isSelected && (
+                    <div className="w-2 h-2 rounded-full bg-[#D49B5B] shrink-0" />
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Existing Link Notice */}
-        {isEditingExisting && (
-          <div className="p-3 bg-[#241810] border border-[#3D2B1F] rounded-xl flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-[#DDD3CA]">
-              <span className="text-[#22C55E] font-bold">✓ Already Added:</span>
-              <span>This link already exists. Saving will update its destination.</span>
-            </div>
-          </div>
-        )}
+        {/* Step 2: Paste URL with Smart Detection */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
+            2. Destination URL
+          </label>
+          <Input
+            placeholder={
+              linkType === 'whatsapp'
+                ? 'https://wa.me/919876543210'
+                : linkType === 'instagram'
+                ? 'https://instagram.com/yourhandle'
+                : linkType === 'youtube'
+                ? 'https://youtube.com/@yourchannel'
+                : 'Paste URL here (e.g. https://...)'
+            }
+            value={url}
+            onChange={(e) => handleUrlInput(e.target.value)}
+            required
+            helperText="Paste any link. Platform and label are recognized automatically."
+          />
+        </div>
 
-        {/* Button Label */}
-        <Input
-          label="Button Label / Call to Action"
-          placeholder="e.g. Reserve a Table, Pay Now, View Menu"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          required
-          helperText="Text displayed on the button for your customers."
-        />
-
-        {/* Destination URL (Independent URL per type) */}
-        <Input
-          label={
-            linkType === 'call'
-              ? 'Phone Number'
-              : linkType === 'email'
-              ? 'Email Address'
-              : linkType === 'whatsapp'
-              ? 'WhatsApp Number or URL'
-              : 'Destination URL'
-          }
-          placeholder={currentConfig.placeholder}
-          value={url}
-          onChange={(e) => handleUrlChange(e.target.value)}
-          required
-          helperText={
-            linkType === 'payment'
-              ? 'Enter your Stripe payment link, PayPal link, or gateway checkout URL.'
-              : linkType === 'whatsapp'
-              ? 'Enter international phone number with country code (e.g. +14159876543) or wa.me URL.'
-              : linkType === 'call'
-              ? 'Enter phone number with optional country code (e.g. +1 555-123-4567).'
-              : linkType === 'email'
-              ? 'Enter email address (e.g. contact@yourbusiness.com).'
-              : 'Full web address (e.g. https://yourbusiness.com).'
-          }
-        />
-
-        {/* Active Toggle */}
-        <div className="flex items-center justify-between pt-3 border-t border-[#3D2B1F]">
-          <div>
-            <label className="text-xs font-bold text-[#FBF9F5] block">Link Visibility</label>
-            <p className="text-[11px] text-[#9E8E81]">
-              {isActive ? 'Visible on your public profile' : 'Hidden from customers'}
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isActive}
-            onClick={() => setIsActive(!isActive)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#D49B5B]/30 ${
-              isActive ? 'bg-[#D49B5B]' : 'bg-[#2E1F15] border border-[#3D2B1F]'
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                isActive ? 'translate-x-5 bg-[#140D08]' : 'translate-x-0 bg-[#9E8E81]'
-              }`}
-            />
-          </button>
+        {/* Step 3: Button Label */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
+            3. Button Label
+          </label>
+          <Input
+            placeholder="e.g. Instagram, WhatsApp, Our Menu"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            required
+            helperText="Short text shown on the public tile."
+          />
         </div>
 
         {/* Actions */}
@@ -346,8 +340,15 @@ export const LinkModal: React.FC<LinkModalProps> = ({
           <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
-            {isEditingExisting ? 'Save Changes' : 'Add Link'}
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            isLoading={isSubmitting}
+            className="px-5 font-bold"
+          >
+            {initialLink ? 'Save Changes' : 'Save Link'}
           </Button>
         </div>
       </form>

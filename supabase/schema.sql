@@ -119,7 +119,11 @@ CREATE TRIGGER trg_sponsors_updated_at BEFORE UPDATE ON public.sponsors FOR EACH
 -- AUTH HOOK TRIGGER: Auto-create profile on auth.users INSERT
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
     INSERT INTO public.profiles (id, email, full_name, role)
     VALUES (
@@ -130,7 +134,7 @@ BEGIN
     );
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -150,24 +154,32 @@ ALTER TABLE public.business_sponsors ENABLE ROW LEVEL SECURITY;
 
 -- Helper function to check if current user is platform owner / admin
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM public.profiles
         WHERE id = auth.uid() AND (role = 'platform_owner' OR role = 'admin')
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_platform_owner()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM public.profiles
         WHERE id = auth.uid() AND (role = 'platform_owner' OR role = 'admin')
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ------------------------------------------------------------------------------
 -- PROFILES POLICIES
@@ -328,7 +340,11 @@ CREATE POLICY "Admins manage business_sponsors"
 -- ROLE ESCALATION PREVENTION
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION public.prevent_profile_role_escalation()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
     IF NEW.role IS DISTINCT FROM OLD.role THEN
         IF NOT public.is_admin() THEN
@@ -337,7 +353,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS trg_prevent_role_escalation ON public.profiles;
 CREATE TRIGGER trg_prevent_role_escalation
@@ -428,4 +444,144 @@ CREATE POLICY "Admins can delete sponsor images"
         bucket_id = 'sponsors' AND
         (public.is_admin() OR public.is_platform_owner())
     );
+
+-- ==============================================================================
+-- 7. ADMIN-CONTROLLED PLANS & SUBSCRIPTIONS SYSTEM
+-- ==============================================================================
+
+-- 7.1 PLANS TABLE
+CREATE TABLE IF NOT EXISTS public.plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    is_free BOOLEAN NOT NULL DEFAULT false,
+    price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    currency TEXT NOT NULL DEFAULT 'INR',
+    billing_interval TEXT NOT NULL DEFAULT 'monthly' CHECK (billing_interval IN ('monthly', 'yearly', 'lifetime', 'custom')),
+    duration_days INTEGER,
+    features JSONB NOT NULL DEFAULT '[]'::jsonb,
+    limits JSONB NOT NULL DEFAULT '{"max_links": 3}'::jsonb,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 7.2 SUBSCRIPTIONS TABLE
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    plan_id UUID NOT NULL REFERENCES public.plans(id) ON DELETE RESTRICT,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'cancelled', 'past_due')),
+    start_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_business_subscription UNIQUE (business_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_plans_is_active ON public.plans(is_active);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_business_id ON public.subscriptions(business_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON public.subscriptions(status);
+
+CREATE TRIGGER trg_plans_updated_at BEFORE UPDATE ON public.plans FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER trg_subscriptions_updated_at BEFORE UPDATE ON public.subscriptions FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Plans RLS
+CREATE POLICY "Public and users can view active plans"
+    ON public.plans FOR SELECT
+    USING (is_active = true OR public.is_admin());
+
+CREATE POLICY "Admins can manage plans"
+    ON public.plans FOR ALL
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+-- Subscriptions RLS
+CREATE POLICY "Owners can view own subscription"
+    ON public.subscriptions FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.businesses
+            WHERE businesses.id = subscriptions.business_id AND businesses.user_id = auth.uid()
+        )
+        OR public.is_admin()
+    );
+
+CREATE POLICY "Admins can manage subscriptions"
+    ON public.subscriptions FOR ALL
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+-- Server-side link limit enforcement trigger
+CREATE OR REPLACE FUNCTION public.enforce_business_link_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_max_links INTEGER;
+    v_current_count INTEGER;
+    v_plan_name TEXT;
+    v_sub_status TEXT;
+BEGIN
+    IF NEW.is_active = true AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.is_active = false)) THEN
+        -- CONCURRENCY SAFETY: Acquire row-level lock on the parent business to prevent race conditions
+        PERFORM 1 FROM public.businesses WHERE id = NEW.business_id FOR UPDATE;
+
+        SELECT
+            (p.limits->>'max_links')::INTEGER,
+            p.name,
+            s.status
+        INTO
+            v_max_links,
+            v_plan_name,
+            v_sub_status
+        FROM public.subscriptions s
+        JOIN public.plans p ON p.id = s.plan_id
+        WHERE s.business_id = NEW.business_id;
+
+        IF v_max_links IS NULL THEN
+            SELECT
+                (limits->>'max_links')::INTEGER,
+                name
+            INTO
+                v_max_links,
+                v_plan_name
+            FROM public.plans
+            WHERE is_free = true AND is_active = true
+            ORDER BY created_at ASC
+            LIMIT 1;
+        END IF;
+
+        IF v_sub_status = 'expired' OR v_sub_status = 'cancelled' THEN
+            RAISE EXCEPTION 'Subscription is % for this business. Please contact Platform Admin to renew.', v_sub_status;
+        END IF;
+
+        IF v_max_links IS NOT NULL AND v_max_links > 0 THEN
+            SELECT count(*) INTO v_current_count
+            FROM public.business_links
+            WHERE business_id = NEW.business_id
+              AND is_active = true
+              AND (TG_OP = 'INSERT' OR id != NEW.id);
+
+            IF v_current_count >= v_max_links THEN
+                RAISE EXCEPTION 'Plan limit exceeded: Your current plan (%) allows a maximum of % active links. Contact Platform Admin to upgrade.', v_plan_name, v_max_links;
+            END IF;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_enforce_business_link_limit ON public.business_links;
+CREATE TRIGGER trg_enforce_business_link_limit
+    BEFORE INSERT OR UPDATE ON public.business_links
+    FOR EACH ROW EXECUTE PROCEDURE public.enforce_business_link_limit();
 

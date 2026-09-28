@@ -1,4 +1,4 @@
-import { Business, BusinessLink, AnalyticsEvent, Sponsor, BusinessSponsor, UserProfile } from '@/types';
+import { Business, BusinessLink, AnalyticsEvent, Sponsor, BusinessSponsor, UserProfile, Plan, Subscription } from '@/types';
 
 /**
  * DEVELOPMENT-ONLY SEED DATA
@@ -129,3 +129,64 @@ export const INITIAL_BUSINESS_SPONSORS: BusinessSponsor[] = [
 ];
 
 export const INITIAL_ANALYTICS: AnalyticsEvent[] = [];
+
+export const INITIAL_PLANS: Plan[] = [
+  {
+    id: 'plan-free',
+    name: 'Free',
+    description: 'Standard plan for individual professionals and emerging businesses.',
+    is_free: true,
+    price: 0,
+    currency: 'INR',
+    billing_interval: 'lifetime',
+    duration_days: null,
+    features: ['single_permanent_url', 'qr_code', 'basic_analytics', 'standard_icons'],
+    limits: { max_links: 3, analytics_tier: 'basic' },
+    is_active: true,
+    display_order: 1,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+  },
+  {
+    id: 'plan-basic',
+    name: 'Basic Growth',
+    description: 'Expanded link capacity and analytics for established retail & services.',
+    is_free: false,
+    price: 499,
+    currency: 'INR',
+    billing_interval: 'monthly',
+    duration_days: 30,
+    features: ['single_permanent_url', 'qr_code', 'standard_analytics', 'standard_icons', 'priority_indexing'],
+    limits: { max_links: 6, analytics_tier: 'standard' },
+    is_active: true,
+    display_order: 2,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 25).toISOString(),
+  },
+  {
+    id: 'plan-pro',
+    name: 'Pro Enterprise',
+    description: 'Maximum link flexibility, advanced analytics, and partner brand positioning.',
+    is_free: false,
+    price: 1499,
+    currency: 'INR',
+    billing_interval: 'yearly',
+    duration_days: 365,
+    features: ['single_permanent_url', 'qr_code', 'advanced_analytics', 'standard_icons', 'partner_sponsor_placement', 'priority_support'],
+    limits: { max_links: 12, analytics_tier: 'advanced' },
+    is_active: true,
+    display_order: 3,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
+  },
+];
+
+export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
+  {
+    id: 'sub-sample-01',
+    business_id: 'biz-sample-001',
+    plan_id: 'plan-free',
+    status: 'active',
+    start_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
+    expires_at: null,
+    notes: 'Default Free Plan',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
+  },
+];

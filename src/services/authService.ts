@@ -25,12 +25,13 @@ export const authService = {
         .single();
 
       if (profileError || !profile) {
-        // Fallback to minimal user metadata if profile table entry is delayed
+        // SECURITY: Elevated roles ('platform_owner' / 'admin') can NEVER be trusted from user_metadata.
+        // Strictly force 'business_owner' on fallback.
         return {
           id: user.id,
           email: user.email || '',
           full_name: (user.user_metadata?.full_name as string) || '',
-          role: (user.user_metadata?.role as UserRole) || 'business_owner',
+          role: 'business_owner',
         };
       }
 

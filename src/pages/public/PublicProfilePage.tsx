@@ -34,17 +34,63 @@ export const PublicProfilePage: React.FC = () => {
         setIsSuspended(false);
         setNotFound(false);
 
-        // 1. Check minimal public status via secure RPC (active vs suspended vs nonexistent)
-        const status = await businessService.getPublicBusinessStatus(slug);
+        // 1. First fetch active business directly in 1 roundtrip
+        const biz = await businessService.getBusinessBySlug(slug);
 
-        if (!status) {
-          // Nonexistent business -> 404
-          setNotFound(true);
+        if (biz) {
+          setBusiness(biz);
+          document.title = `${biz.name} — PersonToPerson`;
+
+          // Fetch active links and active sponsors in parallel
+          const [bizLinks, bizSponsors] = await Promise.all([
+            linkService.getLinksByBusinessId(biz.id, true),
+            sponsorService.getBusinessSponsors(biz.id),
+          ]);
+
+          setLinks(bizLinks);
+
+          // Filter active assignments with active sponsor objects, excluding self-sponsorship
+          const activeBizSponsors = bizSponsors.filter((bs) => {
+            if (bs.is_active === false || !bs.sponsor || bs.sponsor.is_active === false) {
+              return false;
+            }
+            const normBiz = biz.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+            const normSp = bs.sponsor.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
+            return normBiz !== normSp;
+          });
+
+          // Current Rule: One business can have ONLY ONE active sponsor at this time
+          const singleActive = activeBizSponsors[0];
+
+          const headerList =
+            singleActive &&
+            (singleActive.placement === 'header' ||
+              singleActive.placement === 'both' ||
+              !singleActive.placement)
+              ? [singleActive.sponsor!]
+              : [];
+
+          const footerList =
+            singleActive &&
+            (singleActive.placement === 'footer' ||
+              singleActive.placement === 'both' ||
+              !singleActive.placement)
+              ? [singleActive.sponsor!]
+              : [];
+
+          setHeaderSponsors(headerList);
+          setFooterSponsors(footerList);
+
+          // Non-blocking deferred analytics tracking (never blocks profile rendering)
+          setTimeout(() => {
+            analyticsService.trackVisit(biz.id);
+          }, 150);
           return;
         }
 
-        if (!status.is_active) {
-          // Suspended business -> show dedicated suspended screen without exposing sensitive fields
+        // 2. If not found as active, check minimal status via secure RPC (distinguishes inactive vs 404)
+        const status = await businessService.getPublicBusinessStatus(slug);
+        if (status && !status.is_active) {
           setBusiness({
             id: status.id,
             name: status.name,
@@ -55,69 +101,9 @@ export const PublicProfilePage: React.FC = () => {
           });
           setIsSuspended(true);
           document.title = `${status.name} — Profile Unavailable`;
-          return;
-        }
-
-        // 2. Active business -> query full RLS-protected business record
-        const biz = await businessService.getBusinessBySlug(slug);
-
-        if (!biz) {
+        } else {
           setNotFound(true);
-          return;
         }
-
-        setBusiness(biz);
-
-        // Update document title for SEO
-        document.title = `${biz.name} — PersonToPerson`;
-
-        // Fetch active links and active sponsors in parallel
-        const [bizLinks, bizSponsors] = await Promise.all([
-          linkService.getLinksByBusinessId(biz.id, true),
-          sponsorService.getBusinessSponsors(biz.id),
-        ]);
-
-        setLinks(bizLinks);
-
-        // Filter active assignments with active sponsor objects, excluding self-sponsorship
-        const activeBizSponsors = bizSponsors.filter((bs) => {
-          if (bs.is_active === false || !bs.sponsor || bs.sponsor.is_active === false) {
-            return false;
-          }
-          // Do not automatically show a business as its own sponsor
-          const normBiz = biz.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
-          const normSp = bs.sponsor.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/aa/g, 'a');
-          const isSelfSponsor = normBiz === normSp;
-          if (isSelfSponsor) {
-            return false;
-          }
-          return true;
-        });
-
-        // Current Rule: One business can have ONLY ONE active sponsor at this time
-        const singleActive = activeBizSponsors[0];
-
-        const headerList =
-          singleActive &&
-          (singleActive.placement === 'header' ||
-            singleActive.placement === 'both' ||
-            !singleActive.placement)
-            ? [singleActive.sponsor!]
-            : [];
-
-        const footerList =
-          singleActive &&
-          (singleActive.placement === 'footer' ||
-            singleActive.placement === 'both' ||
-            !singleActive.placement)
-            ? [singleActive.sponsor!]
-            : [];
-
-        setHeaderSponsors(headerList);
-        setFooterSponsors(footerList);
-
-        // Record real visit analytics event (deduplicated per session)
-        analyticsService.trackVisit(biz.id);
       } catch (err) {
         console.error('Failed to load public profile:', err);
         setNotFound(true);

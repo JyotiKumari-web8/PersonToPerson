@@ -24,7 +24,6 @@ interface PublicLinkCardProps {
   link: BusinessLink;
   onLinkClick: (linkId: string, url: string) => void;
   sizeVariant?: 'large' | 'medium' | 'compact';
-  isFullSpan?: boolean;
 }
 
 // Maps verbose titles to short, direct, clean tile labels
@@ -100,7 +99,6 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
   link,
   onLinkClick,
   sizeVariant = 'medium',
-  isFullSpan = false,
 }) => {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -220,28 +218,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     }
   };
 
-  // 1. Full-span tile layout (e.g. 7th link in 7 links: spans across the bottom row)
-  if (isFullSpan) {
-    return (
-      <a
-        href={link.url}
-        onClick={handleClick}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex flex-row items-center justify-center gap-2.5 px-4 py-2.5 sm:py-3 rounded-2xl border border-[#E4D2BB] bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer select-none text-center min-h-[52px] sm:min-h-[56px] w-full"
-        title={displayTitle}
-      >
-        <div className="shrink-0 transition-transform group-hover:scale-105 duration-150">
-          {renderTileIcon(link.link_type)}
-        </div>
-        <span className="text-[12px] sm:text-[13px] font-bold text-[#2B1A12] group-hover:text-[#4A2A1A] transition-colors truncate tracking-tight">
-          {displayTitle}
-        </span>
-      </a>
-    );
-  }
-
-  // 2. Standard adaptive vertical tile
+  // Standard adaptive vertical tile
   const sizeClasses = {
     large: {
       card: 'p-3 sm:p-3.5 min-h-[96px] sm:min-h-[102px]',

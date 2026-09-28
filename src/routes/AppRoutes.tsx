@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from '@/pages/Home';
 import { Login } from '@/pages/auth/Login';
@@ -8,21 +8,32 @@ import { ResetPassword } from '@/pages/auth/ResetPassword';
 import { PublicProfilePage } from '@/pages/public/PublicProfilePage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { Overview } from '@/pages/dashboard/Overview';
-import { BusinessProfile } from '@/pages/dashboard/BusinessProfile';
-import { LinksManager } from '@/pages/dashboard/LinksManager';
-import { QRCodeCenter } from '@/pages/dashboard/QRCodeCenter';
-import { AnalyticsPage } from '@/pages/dashboard/AnalyticsPage';
-import { SettingsPage } from '@/pages/dashboard/SettingsPage';
-import { AdminDashboard } from '@/pages/admin/AdminDashboard';
-import { SponsorsManager } from '@/pages/admin/SponsorsManager';
 import { NotFound } from '@/pages/NotFound';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+
+// Lazy-loaded protected pages to ensure public customer profile bundle is ultra-light
+const Overview = lazy(() => import('@/pages/dashboard/Overview').then((m) => ({ default: m.Overview })));
+const BusinessProfile = lazy(() => import('@/pages/dashboard/BusinessProfile').then((m) => ({ default: m.BusinessProfile })));
+const LinksManager = lazy(() => import('@/pages/dashboard/LinksManager').then((m) => ({ default: m.LinksManager })));
+const QRCodeCenter = lazy(() => import('@/pages/dashboard/QRCodeCenter').then((m) => ({ default: m.QRCodeCenter })));
+const AnalyticsPage = lazy(() => import('@/pages/dashboard/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
+const SettingsPage = lazy(() => import('@/pages/dashboard/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const SponsorsManager = lazy(() => import('@/pages/admin/SponsorsManager').then((m) => ({ default: m.SponsorsManager })));
+const PlansManager = lazy(() => import('@/pages/admin/PlansManager').then((m) => ({ default: m.PlansManager })));
+
+const RouteLoadingFallback = () => (
+  <div className="min-h-[50vh] flex items-center justify-center p-8">
+    <LoadingSpinner size="lg" label="Loading view..." />
+  </div>
+);
 
 export const AppRoutes: React.FC = () => {
   return (
-    <Routes>
+    <Suspense fallback={<RouteLoadingFallback />}>
+      <Routes>
       {/* Public Pages */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -116,10 +127,21 @@ export const AppRoutes: React.FC = () => {
           </AdminRoute>
         }
       />
+      <Route
+        path="/admin/subscriptions"
+        element={
+          <AdminRoute>
+            <AdminLayout>
+              <PlansManager />
+            </AdminLayout>
+          </AdminRoute>
+        }
+      />
 
       {/* 404 Catch-All */}
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
+    </Suspense>
   );
 };
