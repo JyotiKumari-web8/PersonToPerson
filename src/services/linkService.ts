@@ -3,6 +3,7 @@ import { BusinessLink, LinkType } from '@/types';
 import { localStore } from './store';
 import { normalizeUrl } from '@/lib/utils';
 import { planService } from './planService';
+import { authService } from './authService';
 
 export const linkService = {
   async getLinksByBusinessId(businessId: string, activeOnly: boolean = false): Promise<BusinessLink[]> {
@@ -42,32 +43,35 @@ export const linkService = {
   }): Promise<BusinessLink> {
     const existing = await this.getLinksByBusinessId(payload.business_id, false);
     const cleanedUrl = normalizeUrl(payload.url, payload.link_type);
+    const willBeActive = payload.is_active ?? true;
 
-    // Enforce unique link-type rule: if a predefined link-type already exists, update it instead of creating duplicate
-    if (payload.link_type !== 'custom') {
-      const duplicate = existing.find((l) => l.link_type === payload.link_type);
+    // BUG 1 & BUG 4: Prevent duplicate active link for the same platform
+    if (willBeActive) {
+      const duplicate = existing.find((l) => l.is_active && l.link_type === payload.link_type);
       if (duplicate) {
-        return this.updateLink(duplicate.id, {
-          label: payload.label.trim(),
-          url: cleanedUrl,
-          is_active: payload.is_active ?? true,
-        });
+        throw new Error(
+          `A link for this platform is already active. Duplicate platforms are not allowed.`
+        );
       }
     }
 
-    // Proactive Plan Limits check for instant feedback
-    const willBeActive = payload.is_active ?? true;
+    // BUG 5: Proactive Plan Limits check (Platform Admin / Admin bypass)
     if (willBeActive) {
-      try {
-        const sub = await planService.getSubscriptionByBusinessId(payload.business_id);
-        if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
-          throw new Error(
-            `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
-          );
-        }
-      } catch (subErr: any) {
-        if (subErr?.message?.includes('Plan limit reached')) {
-          throw subErr;
+      const profile = await authService.getCurrentProfile().catch(() => null);
+      const isPrivileged = profile?.role === 'platform_owner' || profile?.role === 'admin';
+
+      if (!isPrivileged) {
+        try {
+          const sub = await planService.getSubscriptionByBusinessId(payload.business_id);
+          if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
+            throw new Error(
+              `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
+            );
+          }
+        } catch (subErr: any) {
+          if (subErr?.message?.includes('Plan limit reached')) {
+            throw subErr;
+          }
         }
       }
     }
@@ -124,35 +128,68 @@ export const linkService = {
       cleanUpdates.label = cleanUpdates.label.trim();
     }
 
-    // If reactivating a link, check plan limits
-    if (cleanUpdates.is_active === true) {
+    // If updating platform type or activating link, enforce duplicate prevention and plan limits
+    if (cleanUpdates.is_active === true || cleanUpdates.link_type) {
       try {
         let currentBizId: string | null = null;
         let wasActive = true;
+        let currentType: LinkType | null = null;
+
         if (isSupabaseConfigured) {
-          const { data: linkRec } = await supabase.from('business_links').select('business_id, is_active').eq('id', id).maybeSingle();
+          const { data: linkRec } = await supabase
+            .from('business_links')
+            .select('business_id, is_active, link_type')
+            .eq('id', id)
+            .maybeSingle();
           if (linkRec) {
             currentBizId = linkRec.business_id;
             wasActive = Boolean(linkRec.is_active);
+            currentType = linkRec.link_type as LinkType;
           }
         } else {
           const localL = localStore.getLinks().find((l) => l.id === id);
           if (localL) {
             currentBizId = localL.business_id;
             wasActive = localL.is_active;
+            currentType = localL.link_type;
           }
         }
 
-        if (currentBizId && !wasActive) {
-          const sub = await planService.getSubscriptionByBusinessId(currentBizId);
-          if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
-            throw new Error(
-              `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
-            );
+        const effectiveType = cleanUpdates.link_type || currentType;
+        const effectiveActive = cleanUpdates.is_active !== undefined ? cleanUpdates.is_active : wasActive;
+
+        // Prevent duplicate active platform
+        if (currentBizId && effectiveActive && effectiveType) {
+          const allLinks = await this.getLinksByBusinessId(currentBizId, false);
+          const duplicate = allLinks.find(
+            (l) => l.is_active && l.link_type === effectiveType && l.id !== id
+          );
+          if (duplicate) {
+            throw new Error('A link for this platform is already active. Duplicate platforms are not allowed.');
+          }
+        }
+
+        // Plan limits check (Platform Admin / Admin bypass)
+        if (currentBizId && cleanUpdates.is_active === true && !wasActive) {
+          const profile = await authService.getCurrentProfile().catch(() => null);
+          const isPrivileged = profile?.role === 'platform_owner' || profile?.role === 'admin';
+
+          if (!isPrivileged) {
+            const sub = await planService.getSubscriptionByBusinessId(currentBizId);
+            if (sub && sub.max_links > 0 && sub.active_links_count >= sub.max_links) {
+              throw new Error(
+                `Plan limit reached: Your current ${sub.plan_name} plan allows up to ${sub.max_links} active links. Contact Platform Admin to upgrade.`
+              );
+            }
           }
         }
       } catch (err: any) {
-        if (err?.message?.includes('Plan limit reached')) throw err;
+        if (
+          err?.message?.includes('Plan limit reached') ||
+          err?.message?.includes('already active')
+        ) {
+          throw err;
+        }
       }
     }
 

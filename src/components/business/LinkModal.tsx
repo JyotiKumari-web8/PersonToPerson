@@ -23,6 +23,7 @@ interface LinkModalProps {
   existingLinks?: BusinessLink[];
   maxLinks?: number;
   planName?: string;
+  isPrivileged?: boolean;
 }
 
 // Exact list requested by user
@@ -94,6 +95,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   existingLinks = [],
   maxLinks,
   planName = 'Free',
+  isPrivileged = false,
 }) => {
   const [linkType, setLinkType] = useState<LinkType>('instagram');
   const [url, setUrl] = useState('');
@@ -102,14 +104,21 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Stored drafts per platform
-  const [draftUrls, setDraftUrls] = useState<Partial<Record<LinkType, string>>>({});
-
-  // Check if limit is reached for adding new active links
+  // Check if limit is reached for adding new active links (admin bypass)
   const activeLinksCount = existingLinks.filter((l) => l.is_active).length;
   const isLimitReached = Boolean(
-    !initialLink && maxLinks && maxLinks > 0 && activeLinksCount >= maxLinks
+    !isPrivileged && !initialLink && maxLinks && maxLinks > 0 && activeLinksCount >= maxLinks
   );
+
+  // Helper: Determine if a platform type is already used by an active link
+  const isPlatformAlreadyUsed = (type: LinkType) => {
+    // EDIT MODE EXCEPTION: Its own current platform must remain selectable
+    if (initialLink && initialLink.link_type === type) return false;
+    // Check if any other active link has this platform type
+    return existingLinks.some(
+      (l) => l.is_active && l.link_type === type && l.id !== initialLink?.id
+    );
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -121,14 +130,13 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setUrl(initialLink.url);
       setLabel(initialLink.label);
       setIsActive(initialLink.is_active);
-      setDraftUrls((prev) => ({ ...prev, [initialLink.link_type]: initialLink.url }));
     } else {
-      // Find first unused platform or default to Instagram
+      // Find first unused platform that doesn't already have an active link
       const unused = ORDERED_PLATFORMS.find(
-        (p) => p.type !== 'custom' && !existingLinks.some((l) => l.link_type === p.type)
+        (p) => !existingLinks.some((l) => l.is_active && l.link_type === p.type)
       );
-      const chosenType = unused ? unused.type : 'instagram';
-      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === chosenType)?.label || 'Instagram';
+      const chosenType = unused ? unused.type : 'custom';
+      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === chosenType)?.label || 'Other';
 
       setLinkType(chosenType);
       setUrl('');
@@ -137,39 +145,43 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     }
   }, [initialLink, isOpen]);
 
-  // Handle manual platform button tap
+  // Handle manual platform button selection
   const handleSelectPlatform = (type: LinkType, defaultLbl: string) => {
-    // Save draft for previous type
-    if (url) {
-      setDraftUrls((prev) => ({ ...prev, [linkType]: url }));
-    }
+    // Cannot select already used platform
+    if (isPlatformAlreadyUsed(type)) return;
+    if (type === linkType) return;
 
+    // BUG 2: When platform changes:
+    // 1. Immediately clear Destination URL.
+    // 2. Reset validation state.
+    // 3. Change Button Label automatically to the platform's label.
+    // 4. Show an empty URL field.
+    // 5. Do NOT carry old URL into new platform.
     setLinkType(type);
+    setUrl('');
     setError(null);
-
-    // If user hasn't edited label or it equals previous default, update to new default
-    const prevDefault = ORDERED_PLATFORMS.find((p) => p.type === linkType)?.label;
-    if (!label || label === prevDefault) {
-      setLabel(defaultLbl);
-    }
-
-    // Load draft for this type if present
-    if (draftUrls[type]) {
-      setUrl(draftUrls[type]!);
-    }
+    setLabel(defaultLbl);
   };
 
   // Smart URL input handler
   const handleUrlInput = (rawVal: string) => {
     setUrl(rawVal);
     setError(null);
-    setDraftUrls((prev) => ({ ...prev, [linkType]: rawVal }));
 
     // Run smart URL detection on paste/type
     const detected = detectPlatformFromUrl(rawVal);
-    if (detected && detected.type !== linkType) {
+    if (detected) {
+      if (detected.type === linkType) return;
+
+      // BUG 4: If pasted URL belongs to an already-used platform:
+      // Show duplicate-platform validation and prevent switching/saving.
+      if (isPlatformAlreadyUsed(detected.type)) {
+        setError(`A link for ${detected.defaultLabel} is already active. Duplicate platforms are not allowed.`);
+        return;
+      }
+
+      // Switch to detected unused platform
       setLinkType(detected.type);
-      // Auto-fill label if current label was default or empty
       const prevDefault = ORDERED_PLATFORMS.find((p) => p.type === linkType)?.label;
       if (!label || label === prevDefault) {
         setLabel(detected.defaultLabel);
@@ -185,7 +197,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     const trimmedLabel = label.trim();
 
     if (!trimmedUrl) {
-      setError('Please enter a valid link.');
+      setError('Please enter a destination URL.');
       return;
     }
 
@@ -194,9 +206,29 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       return;
     }
 
-    // Friendly URL validation
+    // BUG 1 & BUG 4: Prevent duplicate active platform
+    if (isPlatformAlreadyUsed(linkType)) {
+      setError(`A link for ${selectedPlatformCfg.label} is already active. Duplicate platforms are not allowed.`);
+      return;
+    }
+
+    // BUG 3: Platform-specific URL validation
     if (!isValidUrl(trimmedUrl, linkType)) {
-      setError('Please enter a valid link.');
+      if (linkType === 'instagram') {
+        setError('Please enter a valid Instagram URL (e.g. https://instagram.com/yourhandle).');
+      } else if (linkType === 'facebook') {
+        setError('Please enter a valid Facebook URL (e.g. https://facebook.com/yourpage).');
+      } else if (linkType === 'youtube') {
+        setError('Please enter a valid YouTube URL (e.g. https://youtube.com/@channel or https://youtu.be/...).');
+      } else if (linkType === 'whatsapp') {
+        setError('Please enter a valid WhatsApp link (e.g. https://wa.me/91...) or phone number.');
+      } else if (linkType === 'google_maps') {
+        setError('Please enter a valid Google Maps URL (e.g. https://maps.google.com/...).');
+      } else if (linkType === 'google_review') {
+        setError('Please enter a valid Google Review URL.');
+      } else {
+        setError('Please enter a valid URL (e.g. https://example.com).');
+      }
       return;
     }
 
@@ -215,9 +247,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     } catch (err: unknown) {
       console.error('Failed to save link:', err);
       setError(
-        err instanceof Error && err.message.includes('Plan limit')
-          ? err.message
-          : 'Please enter a valid link.'
+        err instanceof Error ? err.message : 'Please enter a valid link.'
       );
     } finally {
       setIsSubmitting(false);
@@ -225,7 +255,6 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   };
 
   const selectedPlatformCfg = ORDERED_PLATFORMS.find((p) => p.type === linkType) || ORDERED_PLATFORMS[0];
-  const iconCfg = LINK_TYPE_CONFIG[linkType] || LINK_TYPE_CONFIG.custom;
 
   return (
     <Modal
@@ -243,7 +272,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
           </div>
         )}
 
-        {/* Plan Limit Warning */}
+        {/* Plan Limit Warning (Only shown to normal business owners when limit reached) */}
         {isLimitReached && (
           <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-200 space-y-1">
             <div className="font-bold flex items-center gap-1.5 text-amber-400">
@@ -267,30 +296,34 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             {ORDERED_PLATFORMS.map((platform) => {
               const isSelected = linkType === platform.type;
               const cfg = LINK_TYPE_CONFIG[platform.type] || LINK_TYPE_CONFIG.custom;
-              const isAlreadyAdded = existingLinks.some(
-                (l) => l.link_type === platform.type && l.id !== initialLink?.id
-              );
+              const isAlreadyAdded = isPlatformAlreadyUsed(platform.type);
 
               return (
                 <button
                   key={platform.type}
                   type="button"
-                  onClick={() => handleSelectPlatform(platform.type, platform.label)}
-                  className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer min-h-[48px] select-none ${
-                    isSelected
-                      ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs font-bold'
-                      : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/50 hover:bg-[#241810]'
+                  disabled={isAlreadyAdded}
+                  onClick={() => !isAlreadyAdded && handleSelectPlatform(platform.type, platform.label)}
+                  className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all min-h-[48px] select-none ${
+                    isAlreadyAdded
+                      ? 'opacity-40 cursor-not-allowed border-[#2E1F15] bg-[#140D08]/60 text-[#7A6B5D]'
+                      : isSelected
+                      ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs font-bold cursor-pointer'
+                      : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/50 hover:bg-[#241810] cursor-pointer'
                   }`}
                 >
                   <div className="shrink-0">
-                    {cfg.icon({ className: 'w-4 h-4 text-[#D49B5B]' })}
+                    {cfg.icon({ className: `w-4 h-4 ${isAlreadyAdded ? 'text-[#7A6B5D]' : 'text-[#D49B5B]'}` })}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <span className="text-xs truncate block">{platform.shortLabel}</span>
+                    {isAlreadyAdded && (
+                      <span className="text-[10px] text-[#A8988B] block font-medium">Already Added</span>
+                    )}
                   </div>
 
-                  {isSelected && (
+                  {isSelected && !isAlreadyAdded && (
                     <div className="w-2 h-2 rounded-full bg-[#D49B5B] shrink-0" />
                   )}
                 </button>
@@ -310,6 +343,8 @@ export const LinkModal: React.FC<LinkModalProps> = ({
                 ? 'https://wa.me/919876543210'
                 : linkType === 'instagram'
                 ? 'https://instagram.com/yourhandle'
+                : linkType === 'facebook'
+                ? 'https://facebook.com/yourpage'
                 : linkType === 'youtube'
                 ? 'https://youtube.com/@yourchannel'
                 : 'Paste URL here (e.g. https://...)'
@@ -317,7 +352,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             value={url}
             onChange={(e) => handleUrlInput(e.target.value)}
             required
-            helperText="Paste any link. Platform and label are recognized automatically."
+            helperText="Paste destination link. URL is validated for the selected platform."
           />
         </div>
 

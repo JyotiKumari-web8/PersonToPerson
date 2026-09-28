@@ -24,18 +24,81 @@ export function isValidUrl(urlString: string, type?: LinkType): boolean {
   }
 
   if (type === 'whatsapp') {
-    // Can be wa.me link or phone number
-    if (/^https?:\/\/(wa\.me|api\.whatsapp\.com)\/.+/i.test(trimmed)) return true;
-    if (/^\+?[0-9\s-]{7,16}$/.test(trimmed)) return true;
+    // Can be wa.me link, api.whatsapp.com, chat/web whatsapp, or international phone number
+    if (/^(https?:\/\/)?(wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com|web\.whatsapp\.com)\/.+/i.test(trimmed)) {
+      return true;
+    }
+    if (/^\+?[0-9\s-]{7,16}$/.test(trimmed)) {
+      return true;
+    }
+    return false;
   }
 
-  // Standard web links
+  // URL parsing helper for web-based platforms
+  let parsed: URL;
   try {
-    const url = new URL(trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`);
-    return url.protocol === 'http:' || url.protocol === 'https:';
+    const withProtocol = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+      ? trimmed
+      : `https://${trimmed}`;
+    parsed = new URL(withProtocol);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
   } catch {
     return false;
   }
+
+  const host = parsed.hostname.toLowerCase();
+  const path = parsed.pathname.toLowerCase();
+
+  if (type === 'instagram') {
+    const isInsta = host === 'instagram.com' || host.endsWith('.instagram.com') || host === 'instagr.am' || host.endsWith('.instagr.am');
+    return isInsta && (path.length > 1 || parsed.search.length > 1);
+  }
+
+  if (type === 'facebook') {
+    return (
+      host === 'facebook.com' ||
+      host.endsWith('.facebook.com') ||
+      host === 'fb.com' ||
+      host.endsWith('.fb.com') ||
+      host === 'fb.watch' ||
+      host.endsWith('.fb.watch') ||
+      host === 'fb.me' ||
+      host.endsWith('.fb.me')
+    );
+  }
+
+  if (type === 'youtube') {
+    return (
+      host === 'youtube.com' ||
+      host.endsWith('.youtube.com') ||
+      host === 'youtu.be' ||
+      host.endsWith('.youtu.be')
+    );
+  }
+
+  if (type === 'google_maps') {
+    const isMapsHost =
+      host === 'maps.google.com' ||
+      host.endsWith('.maps.google.com') ||
+      host === 'maps.app.goo.gl' ||
+      (host === 'goo.gl' && path.startsWith('/maps'));
+    const isGoogleMapsPath =
+      (host === 'google.com' || host.endsWith('.google.com')) &&
+      (path.startsWith('/maps') || parsed.search.toLowerCase().includes('maps'));
+    return isMapsHost || isGoogleMapsPath;
+  }
+
+  if (type === 'google_review') {
+    const isGPage = host === 'g.page' || host.endsWith('.g.page');
+    const isGoogle = host === 'google.com' || host.endsWith('.google.com') || host === 'goo.gl' || host.endsWith('.goo.gl');
+    const hasReview = path.includes('review') || parsed.search.toLowerCase().includes('review') || path.includes('/local/writereview');
+    return isGPage || (isGoogle && hasReview) || isGoogle;
+  }
+
+  // Standard web links for website, payment, booking, menu, portfolio, admission, custom
+  return true;
 }
 
 /**

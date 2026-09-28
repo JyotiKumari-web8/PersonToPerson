@@ -166,6 +166,11 @@ DECLARE
     v_plan_name TEXT;
     v_sub_status TEXT;
 BEGIN
+    -- Platform Admin / Admin bypass: allow unrestricted management
+    IF public.is_admin() THEN
+        RETURN NEW;
+    END IF;
+
     -- Only enforce if link is being set to active
     IF NEW.is_active = true AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.is_active = false)) THEN
         -- CONCURRENCY SAFETY: Acquire row-level lock on the parent business to prevent race conditions

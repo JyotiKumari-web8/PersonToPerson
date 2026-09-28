@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { linkService } from '@/services/linkService';
 import { BusinessLink, LinkType, BusinessSubscriptionDetails } from '@/types';
@@ -10,10 +11,11 @@ import { LinkModal } from '@/components/business/LinkModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert } from '@/components/common/Alert';
-import { Plus, Link2, HelpCircle, AlertCircle } from 'lucide-react';
+import { Plus, Link2, AlertCircle } from 'lucide-react';
 
 export const LinksManager: React.FC = () => {
-  const { business } = useAuth();
+  const { business, isAdmin, isPlatformOwner } = useAuth();
+  const isPrivileged = isAdmin || isPlatformOwner;
   const [links, setLinks] = useState<BusinessLink[]>([]);
   const [subscription, setSubscription] = useState<BusinessSubscriptionDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,7 +129,8 @@ export const LinksManager: React.FC = () => {
 
   const activeCount = links.filter((l) => l.is_active).length;
   const maxLinks = subscription?.max_links ?? 3;
-  const isLimitReached = activeCount >= maxLinks;
+  // Admin is NEVER blocked by business plan limit
+  const isLimitReached = !isPrivileged && activeCount >= maxLinks;
 
   return (
     <div className="space-y-6">
@@ -136,7 +139,7 @@ export const LinksManager: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#FBF9F5] tracking-tight">Dynamic Link Builder</h1>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#241810] text-[#D49B5B] border border-[#3D2B1F]">
-              {subscription?.plan_name || 'Free'} Plan ({activeCount}/{maxLinks} links)
+              {subscription?.plan_name || 'Free'} Plan ({activeCount}{isPrivileged ? ' active links · Admin' : `/${maxLinks} links`})
             </span>
           </div>
           <p className="text-xs text-[#9E8E81] mt-0.5">
@@ -150,6 +153,7 @@ export const LinksManager: React.FC = () => {
             size="sm"
             onClick={handleOpenAdd}
             icon={<Plus className="w-4 h-4" />}
+            disabled={isLimitReached}
           >
             Add New Link
           </Button>
@@ -163,7 +167,7 @@ export const LinksManager: React.FC = () => {
         />
       )}
 
-      {/* Plan Limit Banner if full */}
+      {/* Plan Limit Banner (Only shown to normal business owners when limit reached; completely hidden for Platform Admin / Admin) */}
       {isLimitReached && (
         <div className="p-4 bg-amber-950/30 rounded-2xl border border-amber-800/50 flex items-center justify-between gap-3 text-xs text-amber-200 shadow-sm">
           <div className="flex items-center gap-2.5">
@@ -173,9 +177,12 @@ export const LinksManager: React.FC = () => {
               <strong>{maxLinks} active links</strong>.
             </span>
           </div>
-          <span className="text-[11px] text-[#D49B5B] font-semibold shrink-0">
+          <Link
+            to="/dashboard/settings"
+            className="text-[11px] text-[#D49B5B] hover:text-[#E2B176] font-semibold shrink-0 transition-colors inline-flex items-center gap-0.5"
+          >
             Contact Admin to upgrade &rsaquo;
-          </span>
+          </Link>
         </div>
       )}
 
@@ -186,11 +193,13 @@ export const LinksManager: React.FC = () => {
             <div>
               <CardTitle>Configured Links ({links.length})</CardTitle>
               <CardDescription>
-                {activeCount} of {maxLinks} active link(s) displayed to visitors
+                {isPrivileged
+                  ? `${activeCount} active link(s) displayed to visitors`
+                  : `${activeCount} of ${maxLinks} active link(s) displayed to visitors`}
               </CardDescription>
             </div>
             <span className="text-xs font-mono font-bold text-[#D49B5B] bg-[#1B120B] px-3 py-1 rounded-xl border border-[#3D2B1F]">
-              {activeCount} / {maxLinks} Active
+              {isPrivileged ? `${activeCount} Active` : `${activeCount} / ${maxLinks} Active`}
             </span>
           </div>
         </CardHeader>
@@ -243,6 +252,7 @@ export const LinksManager: React.FC = () => {
         existingLinks={links}
         maxLinks={maxLinks}
         planName={subscription?.plan_name}
+        isPrivileged={isPrivileged}
       />
     </div>
   );

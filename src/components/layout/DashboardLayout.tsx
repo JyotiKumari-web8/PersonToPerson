@@ -3,7 +3,7 @@ import { Navbar } from './Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { copyToClipboard, getPublicBusinessUrl, getInternalBusinessPath } from '@/lib/utils';
 import { Copy, Check, ExternalLink, QrCode, Building2, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Modal } from '@/components/common/Modal';
 import { QRCodeCard } from '@/components/business/QRCodeCard';
 
@@ -13,10 +13,12 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { business } = useAuth();
+  const location = useLocation();
   const [copied, setCopied] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
 
   const publicUrl = business ? getPublicBusinessUrl(business.slug) : '';
+  const isLinksPage = location.pathname.startsWith('/dashboard/links');
 
   const handleCopy = async () => {
     if (!publicUrl) return;
@@ -56,8 +58,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               Set Up Profile Now
             </Link>
           </div>
-        ) : (
-          /* Permanent URL Highlight Banner */
+        ) : !isLinksPage ? (
+          /* Permanent URL Highlight Banner (Hidden on Links page per Bug 7) */
           <div className="mb-6 relative overflow-hidden bg-[#1B120B] border border-[#3D2B1F] rounded-2xl p-5 text-[#FBF9F5] shadow-sm">
             {/* Background subtle radial glow */}
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-[#D49B5B]/10 rounded-full blur-3xl pointer-events-none" />
@@ -112,7 +114,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
         {children}
       </main>
