@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { planService } from '@/services/planService';
+import { authService } from '@/services/authService';
 import { BusinessSubscriptionDetails } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -21,6 +22,7 @@ import {
 export const SubscriptionOverviewCard: React.FC = () => {
   const { business } = useAuth();
   const [subDetails, setSubDetails] = useState<BusinessSubscriptionDetails | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -29,8 +31,12 @@ export const SubscriptionOverviewCard: React.FC = () => {
       if (!business) return;
       try {
         setIsLoading(true);
-        const data = await planService.getSubscriptionByBusinessId(business.id);
+        const [data, email] = await Promise.all([
+          planService.getSubscriptionByBusinessId(business.id),
+          authService.getAdminEmail(),
+        ]);
         setSubDetails(data);
+        if (email) setAdminEmail(email);
       } catch (err) {
         console.error('Failed to load subscription details:', err);
       } finally {
@@ -204,7 +210,7 @@ export const SubscriptionOverviewCard: React.FC = () => {
 
             <div className="p-3 bg-[#1B120B] rounded-lg border border-[#3D2B1F] space-y-1 font-mono text-xs">
               <div className="text-[#D49B5B] font-bold">Contact Platform Admin:</div>
-              <div className="text-[#FBF9F5]">Email: admin@persontoperson.local</div>
+              <div className="text-[#FBF9F5]">Email: {adminEmail}</div>
               <div className="text-[#9E8E81]">Reference Business Slug: /b/{business.slug}</div>
             </div>
 
@@ -213,7 +219,19 @@ export const SubscriptionOverviewCard: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <a
+              href={`mailto:${adminEmail}?subject=${encodeURIComponent(
+                'Request to Increase Link Limit / Upgrade Plan'
+              )}&body=${encodeURIComponent(
+                `Hi Admin,\n\nI would like to request a plan upgrade / link limit increase for "${business.name}" (Slug: /b/${business.slug}, Current Plan: ${subDetails?.plan_name || 'Free'}).\n\nThank you,\n${business.name}`
+              )}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#140D08] bg-[#D49B5B] hover:bg-[#E2B176] rounded-xl transition-all shadow-xs"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Compose Email to Admin</span>
+            </a>
+
             <Button variant="outline" size="sm" onClick={() => setShowUpgradeModal(false)}>
               Close
             </Button>

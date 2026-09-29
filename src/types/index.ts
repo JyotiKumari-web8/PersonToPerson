@@ -111,6 +111,7 @@ export type LinkType =
   | 'whatsapp'
   | 'google_review'
   | 'google_maps'
+  | 'upi_payment'
   | 'payment'
   | 'booking'
   | 'call'
@@ -118,6 +119,8 @@ export type LinkType =
   | 'menu'
   | 'admission'
   | 'portfolio'
+  | 'customer_repeat'
+  | 'smart_stand'
   | 'custom';
 
 export interface BusinessLink {

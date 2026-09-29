@@ -8,6 +8,7 @@ import { Modal } from '@/components/common/Modal';
 import { Alert } from '@/components/common/Alert';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { copyToClipboard, getPublicBusinessUrl, getInternalBusinessPath } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Building2,
@@ -21,9 +22,11 @@ import {
   Phone,
   Tag,
   AlertTriangle,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -325,6 +328,15 @@ export const AdminDashboard: React.FC = () => {
                         {/* Actions Column */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/admin/business/${b.id}`)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#D49B5B] hover:text-[#FBF9F5] hover:bg-[#2E1F15] rounded-lg transition-colors cursor-pointer border border-[#3D2B1F]"
+                              title="Manage this business dashboard (Admin view)"
+                            >
+                              <LayoutDashboard className="w-3.5 h-3.5" />
+                              <span>Dashboard</span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleOpenDetails(b)}

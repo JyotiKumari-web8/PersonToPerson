@@ -8,9 +8,9 @@ import { Business, BusinessLink, AnalyticsEvent, Sponsor, BusinessSponsor, UserP
 
 export const INITIAL_USER: UserProfile = {
   id: 'usr-admin-demo',
-  email: 'dev-admin@persontoperson.local',
-  full_name: 'Local Dev Admin',
-  role: 'admin',
+  email: 'jyotikumariroy204@gmail.com',
+  full_name: 'Platform Administrator',
+  role: 'platform_owner',
   created_at: new Date().toISOString(),
 };
 

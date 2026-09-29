@@ -41,10 +41,29 @@ export const localStore = {
       return initial;
     }
     try {
-      return JSON.parse(raw);
+      const parsed: UserProfile[] = JSON.parse(raw);
+      let modified = false;
+      const updated = parsed.map((u) => {
+        if (
+          (u.role === 'platform_owner' || u.role === 'admin') &&
+          (u.email.includes('persontoperson.local') || !u.email)
+        ) {
+          modified = true;
+          return { ...u, email: INITIAL_USER.email, role: 'platform_owner' as const };
+        }
+        return u;
+      });
+      if (modified) {
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+      }
+      return updated;
     } catch {
       return [INITIAL_USER];
     }
+  },
+
+  saveUsers(users: UserProfile[]) {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   },
 
   getCurrentUser(): UserProfile | null {

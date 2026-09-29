@@ -40,12 +40,15 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-center pr-4">
             {/* Brand Logo */}
             <Link to="/" className="inline-flex items-center gap-3 mb-6 group w-fit">
-              <div className="w-11 h-11 rounded-2xl bg-[#D49B5B] text-[#140D08] flex items-center justify-center font-bold shadow-xs group-hover:bg-[#C08546] transition-all">
-                <LinkIcon className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center p-1 shadow-xs group-hover:border-[#D49B5B]/60 transition-all overflow-hidden">
+                <img src="/prestige-logo.png" alt="Prestige Intelligence" className="w-8.5 h-8.5 object-contain" />
               </div>
-              <span className="font-extrabold text-[#FDFBF7] text-2xl tracking-tight">
-                PersonToPerson
-              </span>
+              <div className="flex flex-col">
+                <span className="font-extrabold text-[#FDFBF7] text-2xl tracking-tight leading-none">
+                  Smart Stand
+                </span>
+                <span className="text-xs text-[#9E8E81] font-medium mt-1">Prestige Intelligence</span>
+              </div>
             </Link>
 
             {/* Trust Pill */}
@@ -129,10 +132,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             {/* Mobile Header (Hidden on Desktop) */}
             <div className="lg:hidden text-center mb-6">
               <Link to="/" className="inline-flex items-center gap-2.5 mb-3 group">
-                <div className="w-10 h-10 rounded-xl bg-[#D49B5B] text-[#140D08] flex items-center justify-center font-bold shadow-xs group-hover:bg-[#C08546] transition-all">
-                  <LinkIcon className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center p-1 shadow-xs group-hover:border-[#D49B5B]/60 transition-all overflow-hidden">
+                  <img src="/prestige-logo.png" alt="Prestige Intelligence" className="w-7 h-7 object-contain" />
                 </div>
-                <span className="font-extrabold text-[#FDFBF7] text-xl tracking-tight">PersonToPerson</span>
+                <div className="flex flex-col text-left">
+                  <span className="font-extrabold text-[#FDFBF7] text-lg tracking-tight leading-tight">Smart Stand</span>
+                  <span className="text-[10px] text-[#9E8E81] font-medium">Prestige Intelligence</span>
+                </div>
               </Link>
               <h2 className="text-2xl font-extrabold text-[#FDFBF7] tracking-tight">{title}</h2>
               <p className="mt-1 text-xs text-[#BFA08A] max-w-xs mx-auto">

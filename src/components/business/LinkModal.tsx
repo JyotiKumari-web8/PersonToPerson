@@ -20,26 +20,30 @@ interface LinkModalProps {
     targetLinkId?: string
   ) => Promise<void>;
   initialLink?: BusinessLink | null;
+  initialLinkType?: LinkType;
   existingLinks?: BusinessLink[];
   maxLinks?: number;
   planName?: string;
   isPrivileged?: boolean;
+  onContactAdmin?: () => void;
 }
 
 // Exact list requested by user
-const ORDERED_PLATFORMS: { type: LinkType; label: string; shortLabel: string }[] = [
+const ORDERED_PLATFORMS: { type: LinkType; label: string; shortLabel: string; special?: boolean }[] = [
   { type: 'instagram', label: 'Instagram', shortLabel: 'Instagram' },
   { type: 'whatsapp', label: 'WhatsApp', shortLabel: 'WhatsApp' },
   { type: 'facebook', label: 'Facebook', shortLabel: 'Facebook' },
   { type: 'youtube', label: 'YouTube', shortLabel: 'YouTube' },
   { type: 'website', label: 'Website', shortLabel: 'Website' },
-  { type: 'google_review', label: 'Google Review', shortLabel: 'Google Review' },
+  { type: 'google_review', label: 'AI Google Review', shortLabel: 'AI Google Review', special: true },
   { type: 'google_maps', label: 'Google Maps', shortLabel: 'Google Maps' },
-  { type: 'payment', label: 'Payment', shortLabel: 'Payment' },
+  { type: 'upi_payment', label: 'UPI Payment', shortLabel: 'UPI Payment' },
+  { type: 'payment', label: 'Payment (URL)', shortLabel: 'Payment' },
   { type: 'booking', label: 'Booking', shortLabel: 'Booking' },
   { type: 'menu', label: 'Menu', shortLabel: 'Menu' },
   { type: 'portfolio', label: 'Portfolio', shortLabel: 'Portfolio' },
   { type: 'admission', label: 'Admission Form', shortLabel: 'Admission Form' },
+  { type: 'customer_repeat', label: 'Customer Repeat', shortLabel: 'Customer Repeat', special: true },
   { type: 'custom', label: 'Other', shortLabel: 'Other' },
 ];
 
@@ -66,7 +70,7 @@ function detectPlatformFromUrl(inputUrl: string): { type: LinkType; defaultLabel
     return { type: 'google_maps', defaultLabel: 'Google Maps' };
   }
   if (url.includes('g.page') || url.includes('writereview') || (url.includes('google.com') && url.includes('review'))) {
-    return { type: 'google_review', defaultLabel: 'Google Review' };
+    return { type: 'google_review', defaultLabel: 'AI Google Review' };
   }
   if (url.includes('paypal.me') || url.includes('stripe.com') || url.includes('razorpay') || url.includes('cash.app')) {
     return { type: 'payment', defaultLabel: 'Payment' };
@@ -92,10 +96,12 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   onClose,
   onSave,
   initialLink,
+  initialLinkType,
   existingLinks = [],
   maxLinks,
   planName = 'Free',
   isPrivileged = false,
+  onContactAdmin,
 }) => {
   const [linkType, setLinkType] = useState<LinkType>('instagram');
   const [url, setUrl] = useState('');
@@ -130,6 +136,12 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setUrl(initialLink.url);
       setLabel(initialLink.label);
       setIsActive(initialLink.is_active);
+    } else if (initialLinkType) {
+      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === initialLinkType)?.label || 'Payment';
+      setLinkType(initialLinkType);
+      setUrl('');
+      setLabel(initialLinkType === 'upi_payment' ? 'Pay via UPI' : defaultLbl);
+      setIsActive(true);
     } else {
       // Find first unused platform that doesn't already have an active link
       const unused = ORDERED_PLATFORMS.find(
@@ -143,7 +155,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setLabel(defaultLbl);
       setIsActive(true);
     }
-  }, [initialLink, isOpen]);
+  }, [initialLink, initialLinkType, isOpen]);
 
   // Handle manual platform button selection
   const handleSelectPlatform = (type: LinkType, defaultLbl: string) => {
@@ -196,8 +208,12 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     const trimmedUrl = url.trim();
     const trimmedLabel = label.trim();
 
-    if (!trimmedUrl) {
-      setError('Please enter a destination URL.');
+    if (!trimmedUrl && linkType !== 'customer_repeat' && (linkType as string) !== 'smart_stand') {
+      if (linkType === 'upi_payment') {
+        setError('Please enter a UPI ID (e.g. yourname@upi or business@okaxis).');
+      } else {
+        setError('Please enter a destination URL.');
+      }
       return;
     }
 
@@ -212,8 +228,17 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       return;
     }
 
-    // BUG 3: Platform-specific URL validation
-    if (!isValidUrl(trimmedUrl, linkType)) {
+    // UPI Payment: validate UPI ID format (contains @)
+    if (linkType === 'upi_payment') {
+      const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      if (!upiPattern.test(trimmedUrl)) {
+        setError('Please enter a valid UPI ID (e.g. yourname@upi, business@okaxis, name@paytm).');
+        return;
+      }
+    } else if (linkType === 'customer_repeat' || (linkType as string) === 'smart_stand') {
+      // customer_repeat URL is optional — no URL validation needed
+    } else if (!isValidUrl(trimmedUrl, linkType)) {
+      // BUG 3: Platform-specific URL validation
       if (linkType === 'instagram') {
         setError('Please enter a valid Instagram URL (e.g. https://instagram.com/yourhandle).');
       } else if (linkType === 'facebook') {
@@ -274,14 +299,25 @@ export const LinkModal: React.FC<LinkModalProps> = ({
 
         {/* Plan Limit Warning (Only shown to normal business owners when limit reached) */}
         {isLimitReached && (
-          <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-200 space-y-1">
-            <div className="font-bold flex items-center gap-1.5 text-amber-400">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Plan Limit Reached ({activeLinksCount} / {maxLinks})</span>
+          <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-200 space-y-1.5">
+            <div className="font-bold flex items-center justify-between gap-1.5 text-amber-400">
+              <div className="flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Plan Limit Reached ({activeLinksCount} / {maxLinks})</span>
+              </div>
+              {onContactAdmin && (
+                <button
+                  type="button"
+                  onClick={onContactAdmin}
+                  className="text-[11px] font-bold text-[#D49B5B] hover:text-[#FBF9F5] underline cursor-pointer"
+                >
+                  Contact Admin
+                </button>
+              )}
             </div>
             <p className="text-[11px] leading-relaxed text-[#DDD3CA]">
               Your current <strong className="text-[#FBF9F5]">{planName}</strong> plan allows up to{' '}
-              {maxLinks} active links. Contact Admin to upgrade your plan.
+              {maxLinks} active links.
             </p>
           </div>
         )}
@@ -332,14 +368,22 @@ export const LinkModal: React.FC<LinkModalProps> = ({
           </div>
         </div>
 
-        {/* Step 2: Paste URL with Smart Detection */}
+        {/* Step 2: Destination URL or UPI ID */}
         <div>
           <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
-            2. Destination URL
+            {linkType === 'upi_payment'
+              ? '2. Business UPI ID'
+              : linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+              ? '2. Destination URL (Optional)'
+              : '2. Destination URL'}
           </label>
           <Input
             placeholder={
-              linkType === 'whatsapp'
+              linkType === 'upi_payment'
+                ? 'example@upi (e.g. business@okaxis or 9876543210@paytm)'
+                : linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+                ? 'https://... (optional destination URL)'
+                : linkType === 'whatsapp'
                 ? 'https://wa.me/919876543210'
                 : linkType === 'instagram'
                 ? 'https://instagram.com/yourhandle'
@@ -347,12 +391,20 @@ export const LinkModal: React.FC<LinkModalProps> = ({
                 ? 'https://facebook.com/yourpage'
                 : linkType === 'youtube'
                 ? 'https://youtube.com/@yourchannel'
+                : linkType === 'google_review'
+                ? 'https://g.page/r/.../review'
                 : 'Paste URL here (e.g. https://...)'
             }
             value={url}
             onChange={(e) => handleUrlInput(e.target.value)}
-            required
-            helperText="Paste destination link. URL is validated for the selected platform."
+            required={linkType !== 'customer_repeat' && (linkType as string) !== 'smart_stand'}
+            helperText={
+              linkType === 'upi_payment'
+                ? 'Enter your official UPI ID. Customers tapping Payment will pay directly via UPI app.'
+                : linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+                ? 'Optional custom destination link for Customer Repeat.'
+                : 'Paste destination link. URL is validated for the selected platform.'
+            }
           />
         </div>
 

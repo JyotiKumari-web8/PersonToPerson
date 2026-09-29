@@ -168,7 +168,7 @@ The application will start at `http://localhost:5173/`.
 
 ### 3. Default Demo Accounts
 If running in local mode before connecting Supabase:
-- **Admin & Demo Business**: `admin@persontoperson.local` / `password123`
+- **Admin & Demo Business**: `jyotikumariroy204@gmail.com` / `password123`
 - **Demo Public Business URL**: `http://localhost:5173/b/lumina-artisan-bistro`
 
 ---

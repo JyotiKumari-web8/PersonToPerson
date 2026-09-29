@@ -9,12 +9,54 @@ import { SubscriptionOverviewCard } from '@/components/business/SubscriptionOver
 import { KeyRound, User, Mail, ShieldCheck } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+
+  const [fullName, setFullName] = useState(user?.full_name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      setFullName(user.full_name || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileStatus(null);
+
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setProfileStatus({ type: 'error', text: 'Email address cannot be empty.' });
+      return;
+    }
+
+    try {
+      setIsUpdatingProfile(true);
+      await authService.updateProfile({
+        full_name: trimmedName,
+        email: trimmedEmail,
+      });
+      await refreshUser();
+      setProfileStatus({ type: 'success', text: 'Account profile updated successfully!' });
+    } catch (err: unknown) {
+      setProfileStatus({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to update account profile.',
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,41 +100,65 @@ export const SettingsPage: React.FC = () => {
       {/* Subscription Card */}
       <SubscriptionOverviewCard />
 
-      {/* Account Info Card */}
+      {/* Account Info & Profile Management Card */}
       <Card>
         <CardHeader>
           <div>
-            <CardTitle>Account Overview</CardTitle>
-            <CardDescription>Your registered account details</CardDescription>
+            <CardTitle>Account Details</CardTitle>
+            <CardDescription>Update your personal name and login email address</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Email Address"
-              value={user?.email || ''}
-              disabled
-              leftAddon={<Mail className="w-4 h-4" />}
-              helperText="Managed by authentication provider"
-            />
-            <Input
-              label="Full Name"
-              value={user?.full_name || 'Not provided'}
-              disabled
-              leftAddon={<User className="w-4 h-4" />}
-            />
-          </div>
 
-          <div className="flex items-center gap-2.5 p-3.5 bg-[#1B120B] rounded-xl border border-[#3D2B1F] text-xs shadow-xs">
-            <ShieldCheck className="w-4 h-4 text-[#22C55E] shrink-0" />
-            <span className="text-[#BFA08A] font-medium">
-              Account Role:{' '}
-              <strong className="text-[#FDFBF7] capitalize font-bold">
-                {user?.role?.replace('_', ' ') || 'Business Owner'}
-              </strong>
-            </span>
-          </div>
-        </CardContent>
+        <form onSubmit={handleProfileUpdate}>
+          <CardContent className="space-y-4">
+            {profileStatus && (
+              <Alert type={profileStatus.type} message={profileStatus.text} />
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your full name"
+                required
+                leftAddon={<User className="w-4 h-4" />}
+                helperText="Display name on your account"
+              />
+              <Input
+                label="Email Address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                required
+                leftAddon={<Mail className="w-4 h-4" />}
+                helperText="Account login and administrative email"
+              />
+            </div>
+
+            <div className="flex items-center gap-2.5 p-3.5 bg-[#1B120B] rounded-xl border border-[#3D2B1F] text-xs shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-[#22C55E] shrink-0" />
+              <span className="text-[#BFA08A] font-medium">
+                Account Role:{' '}
+                <strong className="text-[#FDFBF7] capitalize font-bold">
+                  {user?.role?.replace('_', ' ') || 'Business Owner'}
+                </strong>
+              </span>
+            </div>
+          </CardContent>
+
+          <CardFooter className="justify-end">
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isUpdatingProfile}
+            >
+              Save Account Details
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
 
       {/* Password Reset Card */}

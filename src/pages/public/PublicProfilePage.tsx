@@ -39,7 +39,7 @@ export const PublicProfilePage: React.FC = () => {
 
         if (biz) {
           setBusiness(biz);
-          document.title = `${biz.name} — PersonToPerson`;
+          document.title = `${biz.name} — Smart Stand`;
 
           // Fetch active links and active sponsors in parallel
           const [bizLinks, bizSponsors] = await Promise.all([
@@ -119,6 +119,25 @@ export const PublicProfilePage: React.FC = () => {
     if (business) {
       analyticsService.trackLinkClick(business.id, linkId);
     }
+    if (!url || url === '#') return;
+
+    // UPI Payment flow: launch external UPI handler directly without opening empty tabs
+    if (url.startsWith('upi://')) {
+      window.location.href = url;
+      return;
+    }
+
+    if (
+      url.includes('@') &&
+      !url.startsWith('http://') &&
+      !url.startsWith('https://') &&
+      !url.startsWith('mailto:')
+    ) {
+      const upiUri = `upi://pay?pa=${encodeURIComponent(url.trim())}&pn=${encodeURIComponent(business?.name || '')}&cu=INR`;
+      window.location.href = upiUri;
+      return;
+    }
+
     // Safely open external link
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -159,7 +178,7 @@ export const PublicProfilePage: React.FC = () => {
           <div className="mt-6 w-full flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/" className="w-full sm:w-auto">
               <Button variant="outline" size="md" icon={<Home className="w-4 h-4" />} className="w-full justify-center bg-white border-[#E8E1D5] text-[#1A120B] hover:bg-[#FAF0E6]">
-                Return to PersonToPerson
+                Return to Smart Stand
               </Button>
             </Link>
           </div>
@@ -187,7 +206,7 @@ export const PublicProfilePage: React.FC = () => {
           <div className="mt-6 w-full flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/" className="w-full sm:w-auto">
               <Button variant="primary" size="md" icon={<Home className="w-4 h-4" />} className="w-full justify-center">
-                Explore PersonToPerson
+                Explore Smart Stand
               </Button>
             </Link>
           </div>

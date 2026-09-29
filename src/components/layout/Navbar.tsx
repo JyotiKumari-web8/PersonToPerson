@@ -56,14 +56,14 @@ export const Navbar: React.FC = () => {
           {/* Brand Logo */}
           <div className="flex items-center gap-6">
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="w-8.5 h-8.5 rounded-xl bg-[#D49B5B] text-[#140D08] flex items-center justify-center font-bold shadow-xs group-hover:bg-[#E2B176] transition-all">
-                <LinkIcon className="w-4 h-4 stroke-[2.5]" />
+              <div className="w-8.5 h-8.5 rounded-xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center p-1 shadow-xs group-hover:border-[#D49B5B]/60 transition-all overflow-hidden">
+                <img src="/prestige-logo.png" alt="Prestige Intelligence" className="w-6.5 h-6.5 object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-extrabold text-[#FBF9F5] text-sm tracking-tight leading-tight group-hover:text-[#D49B5B] transition-colors">
-                  PersonToPerson
+                  Smart Stand
                 </span>
-                <span className="text-[10px] text-[#9E8E81] font-medium">Permanent URL</span>
+                <span className="text-[10px] text-[#9E8E81] font-medium">Prestige Intelligence</span>
               </div>
             </Link>
 

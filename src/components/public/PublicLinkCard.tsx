@@ -47,19 +47,26 @@ const VERBOSE_TO_SHORT_TITLE: Record<string, string> = {
   'chat with us': 'WhatsApp',
   'chat on whatsapp': 'WhatsApp',
   'whatsapp': 'WhatsApp',
-  'leave a google review': 'Google',
-  'leave a review': 'Google',
-  'google review': 'Google',
-  'google reviews': 'Google',
-  'review on google': 'Google',
-  'review us on google': 'Google',
+  'ai google review': 'AI Review',
+  'ai google reviews': 'AI Review',
+  'leave an ai google review': 'AI Review',
+  'leave a google review': 'AI Review',
+  'leave a review': 'AI Review',
+  'google review': 'AI Review',
+  'google reviews': 'AI Review',
+  'review on google': 'AI Review',
+  'review us on google': 'AI Review',
   'find our location': 'Maps',
   'google maps': 'Maps',
   'view on google maps': 'Maps',
   'maps': 'Maps',
+  'pay via upi': 'Payment',
+  'upi payment': 'Payment',
   'pay online': 'Payment',
   'pay online securely': 'Payment',
   'payment': 'Payment',
+  'customer repeat': 'Customer Repeat',
+  'smart stand': 'Customer Repeat',
   'book an appointment': 'Booking',
   'booking': 'Booking',
   'book now': 'Booking',
@@ -79,12 +86,13 @@ const VERBOSE_TO_SHORT_TITLE: Record<string, string> = {
 
 const DEFAULT_TYPE_SHORT_TITLES: Record<LinkType, string> = {
   website: 'Website',
-  google_review: 'Google',
+  google_review: 'AI Review',
   facebook: 'Facebook',
   instagram: 'Instagram',
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
   google_maps: 'Maps',
+  upi_payment: 'Payment',
   payment: 'Payment',
   booking: 'Booking',
   call: 'Call',
@@ -92,6 +100,8 @@ const DEFAULT_TYPE_SHORT_TITLES: Record<LinkType, string> = {
   menu: 'Menu',
   admission: 'Admission',
   portfolio: 'Portfolio',
+  customer_repeat: 'Customer Repeat',
+  smart_stand: 'Customer Repeat',
   custom: 'Link',
 };
 
@@ -112,16 +122,18 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     (rawLabel ? rawLabel : DEFAULT_TYPE_SHORT_TITLES[link.link_type] || 'Link');
 
   const renderTileIcon = (type: LinkType) => {
+    // Noticeably larger badge containers for impactful presentation
     const badgeClasses = {
-      large: 'w-11 h-11 sm:w-12 sm:h-12 rounded-xl',
-      medium: 'w-10 h-10 sm:w-10.5 sm:h-10.5 rounded-xl',
-      compact: 'w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg',
+      large: 'w-13 h-13 sm:w-14 sm:h-14 rounded-2xl',
+      medium: 'w-12 h-12 sm:w-13 sm:h-13 rounded-2xl',
+      compact: 'w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-xl',
     }[sizeVariant];
 
+    // Noticeably larger icons with proper aspect ratio and centered
     const iconClasses = {
-      large: 'w-5.5 h-5.5',
-      medium: 'w-5 h-5',
-      compact: 'w-4 h-4',
+      large: 'w-7.5 h-7.5 sm:w-8 sm:h-8',
+      medium: 'w-7 h-7 sm:w-7.5 sm:h-7.5',
+      compact: 'w-6 h-6 sm:w-6.5 sm:h-6.5',
     }[sizeVariant];
 
     switch (type) {
@@ -157,7 +169,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
         );
       case 'google_review':
         return (
-          <div className={`${badgeClasses} bg-white border border-[#E4D2BB] flex items-center justify-center shadow-2xs p-1.5`}>
+          <div className={`${badgeClasses} bg-white border border-[#E4D2BB] flex items-center justify-center shadow-2xs p-2`}>
             <GoogleGIcon className={iconClasses} />
           </div>
         );
@@ -167,10 +179,23 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
             <MapPin className={`${iconClasses} text-[#EA4335]`} />
           </div>
         );
+      case 'upi_payment':
+        return (
+          <div className={`${badgeClasses} bg-[#7C3AED] text-white flex items-center justify-center shadow-2xs`}>
+            <CreditCard className={`${iconClasses} text-white`} />
+          </div>
+        );
       case 'payment':
         return (
           <div className={`${badgeClasses} bg-[#059669] text-white flex items-center justify-center shadow-2xs`}>
             <CreditCard className={`${iconClasses} text-white`} />
+          </div>
+        );
+      case 'customer_repeat':
+      case 'smart_stand':
+        return (
+          <div className={`${badgeClasses} bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shadow-2xs p-2 overflow-hidden`}>
+            <img src="/prestige-logo.png" alt="Customer Repeat" className={`${iconClasses} object-contain`} />
           </div>
         );
       case 'booking':
@@ -218,32 +243,32 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     }
   };
 
-  // Standard adaptive vertical tile
+  // Standard adaptive vertical tile with reduced unnecessary outer spacing
   const sizeClasses = {
     large: {
-      card: 'p-3 sm:p-3.5 min-h-[96px] sm:min-h-[102px]',
-      iconWrap: 'mb-2',
-      text: 'text-xs sm:text-[13px]',
+      card: 'p-2 sm:p-2.5 min-h-[92px] sm:min-h-[98px]',
+      iconWrap: 'mb-1.5',
+      text: 'text-xs sm:text-[12.5px]',
     },
     medium: {
-      card: 'p-2.5 sm:p-3 min-h-[84px] sm:min-h-[88px]',
-      iconWrap: 'mb-1.5',
-      text: 'text-[11.5px] sm:text-xs',
+      card: 'p-1.5 sm:p-2 min-h-[82px] sm:min-h-[86px]',
+      iconWrap: 'mb-1',
+      text: 'text-[11px] sm:text-[11.5px]',
     },
     compact: {
-      card: 'p-2 sm:p-2.5 min-h-[74px] sm:min-h-[78px]',
-      iconWrap: 'mb-1',
-      text: 'text-[10.5px] sm:text-[11px]',
+      card: 'p-1.5 sm:p-2 min-h-[72px] sm:min-h-[76px]',
+      iconWrap: 'mb-0.5',
+      text: 'text-[10px] sm:text-[10.5px]',
     },
   }[sizeVariant];
 
   return (
     <a
-      href={link.url}
+      href={link.url || '#'}
       onClick={handleClick}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex flex-col items-center justify-center rounded-2xl border border-[#E4D2BB] bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer select-none text-center w-full h-full ${sizeClasses.card}`}
+      className={`group flex flex-col items-center justify-center rounded-2xl border border-[#E8DCCB]/80 bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer select-none text-center w-full h-full ${sizeClasses.card}`}
       title={displayTitle}
     >
       {/* Brand / Action Icon Badge */}

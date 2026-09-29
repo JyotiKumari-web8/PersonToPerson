@@ -23,6 +23,7 @@ const SettingsPage = lazy(() => import('@/pages/dashboard/SettingsPage').then((m
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
 const SponsorsManager = lazy(() => import('@/pages/admin/SponsorsManager').then((m) => ({ default: m.SponsorsManager })));
 const PlansManager = lazy(() => import('@/pages/admin/PlansManager').then((m) => ({ default: m.PlansManager })));
+const AdminBusinessDashboard = lazy(() => import('@/pages/admin/AdminBusinessDashboard').then((m) => ({ default: m.AdminBusinessDashboard })));
 
 const RouteLoadingFallback = () => (
   <div className="min-h-[50vh] flex items-center justify-center p-8">
@@ -137,6 +138,30 @@ export const AppRoutes: React.FC = () => {
           </AdminRoute>
         }
       />
+
+      {/*
+        Admin Business Management Routes
+        AdminBusinessDashboard acts as the layout (Navbar + admin banner + sub-nav + Outlet).
+        Child page components are the SAME ones used in the normal /dashboard routes —
+        they automatically receive the managed business via useAuth() which returns the
+        adminOverrideBusiness when the Platform Owner is in management mode.
+        No DashboardLayout or AdminLayout wrapper needed here.
+      */}
+      <Route
+        path="/admin/business/:businessId"
+        element={
+          <AdminRoute>
+            <AdminBusinessDashboard />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<Overview />} />
+        <Route path="profile" element={<BusinessProfile />} />
+        <Route path="links" element={<LinksManager />} />
+        <Route path="qr-code" element={<QRCodeCenter />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
 
       {/* 404 Catch-All */}
       <Route path="/404" element={<NotFound />} />

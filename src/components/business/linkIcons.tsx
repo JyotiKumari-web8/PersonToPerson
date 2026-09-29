@@ -10,6 +10,8 @@ import {
   Link as LinkIcon,
   Phone,
   Mail,
+  Smartphone,
+  Zap,
 } from 'lucide-react';
 import { LinkType } from '@/types';
 
@@ -161,9 +163,9 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
   },
   google_review: {
     type: 'google_review',
-    label: 'Google Review',
-    defaultLabel: 'Google Review',
-    defaultSubtitle: 'Leave a review',
+    label: 'AI Google Review',
+    defaultLabel: 'AI Google Review',
+    defaultSubtitle: 'Leave an AI-assisted Google review',
     placeholder: 'https://g.page/r/.../review',
     colorClass: 'text-amber-500',
     badgeBg: 'bg-amber-950/40 text-amber-300 border-amber-800/50',
@@ -188,6 +190,22 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
     brandBadge: () => (
       <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white border border-[#E4D2BB] flex items-center justify-center shrink-0 shadow-xs">
         <MapPin className="w-6 h-6 text-[#EA4335]" />
+      </div>
+    ),
+  },
+  upi_payment: {
+    type: 'upi_payment',
+    label: 'UPI Payment',
+    defaultLabel: 'Pay via UPI',
+    defaultSubtitle: 'Pay instantly via UPI',
+    placeholder: 'yourname@upi  (e.g. business@okaxis)',
+    colorClass: 'text-violet-500',
+    badgeBg: 'bg-violet-950/40 text-violet-300 border-violet-800/50',
+    publicBtnClass: 'bg-[#7C3AED] text-white',
+    icon: (props) => <Smartphone className={props?.className || 'w-5 h-5'} />,
+    brandBadge: () => (
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#7C3AED] text-white flex items-center justify-center shrink-0 shadow-xs">
+        <Smartphone className="w-6 h-6 text-white" />
       </div>
     ),
   },
@@ -316,6 +334,50 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
     brandBadge: () => (
       <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#F3E6D3] text-[#2B1A12] flex items-center justify-center shrink-0 shadow-xs border border-[#E4D2BB]">
         <LinkIcon className="w-6 h-6 text-[#2B1A12]" />
+      </div>
+    ),
+  },
+  customer_repeat: {
+    type: 'customer_repeat',
+    label: 'Customer Repeat',
+    defaultLabel: 'Customer Repeat',
+    defaultSubtitle: 'Drive repeat customer visits',
+    placeholder: 'https://... (optional destination URL)',
+    colorClass: 'text-purple-500',
+    badgeBg: 'bg-purple-950/40 text-purple-300 border-purple-800/50',
+    publicBtnClass: 'bg-[#863bff] text-white',
+    icon: (props) => (
+      <img
+        src="/prestige-logo.png"
+        alt="Customer Repeat"
+        className={`${props?.className || 'w-5 h-5'} object-contain`}
+      />
+    ),
+    brandBadge: () => (
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shrink-0 shadow-xs p-2 overflow-hidden">
+        <img src="/prestige-logo.png" alt="Customer Repeat" className="w-6 h-6 object-contain" />
+      </div>
+    ),
+  },
+  smart_stand: {
+    type: 'customer_repeat',
+    label: 'Customer Repeat',
+    defaultLabel: 'Customer Repeat',
+    defaultSubtitle: 'Drive repeat customer visits',
+    placeholder: 'https://... (optional destination URL)',
+    colorClass: 'text-purple-500',
+    badgeBg: 'bg-purple-950/40 text-purple-300 border-purple-800/50',
+    publicBtnClass: 'bg-[#863bff] text-white',
+    icon: (props) => (
+      <img
+        src="/prestige-logo.png"
+        alt="Customer Repeat"
+        className={`${props?.className || 'w-5 h-5'} object-contain`}
+      />
+    ),
+    brandBadge: () => (
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shrink-0 shadow-xs p-2 overflow-hidden">
+        <img src="/prestige-logo.png" alt="Customer Repeat" className="w-6 h-6 object-contain" />
       </div>
     ),
   },

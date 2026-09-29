@@ -18,7 +18,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [showQRModal, setShowQRModal] = useState(false);
 
   const publicUrl = business ? getPublicBusinessUrl(business.slug) : '';
-  const isLinksPage = location.pathname.startsWith('/dashboard/links');
+  const isDashboardHome = location.pathname === '/dashboard';
 
   const handleCopy = async () => {
     if (!publicUrl) return;
@@ -58,8 +58,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               Set Up Profile Now
             </Link>
           </div>
-        ) : !isLinksPage ? (
-          /* Permanent URL Highlight Banner (Hidden on Links page per Bug 7) */
+        ) : isDashboardHome ? (
+          /* Permanent URL Highlight Banner — shown only on /dashboard home */
           <div className="mb-6 relative overflow-hidden bg-[#1B120B] border border-[#3D2B1F] rounded-2xl p-5 text-[#FBF9F5] shadow-sm">
             {/* Background subtle radial glow */}
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-[#D49B5B]/10 rounded-full blur-3xl pointer-events-none" />

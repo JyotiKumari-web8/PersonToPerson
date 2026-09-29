@@ -66,15 +66,15 @@ export const Home: React.FC = () => {
       <header className="sticky top-0 z-40 bg-[#140D08]/90 backdrop-blur-md border-b border-[#3D2B1F] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8.5 h-8.5 rounded-xl bg-[#D49B5B] text-[#140D08] flex items-center justify-center font-bold shadow-xs group-hover:bg-[#C08546] transition-all">
-              <LinkIcon className="w-4 h-4" />
+            <div className="w-8.5 h-8.5 rounded-xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center p-1 shadow-xs group-hover:border-[#D49B5B]/60 transition-all overflow-hidden">
+              <img src="/prestige-logo.png" alt="Prestige Intelligence" className="w-6.5 h-6.5 object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-[#FDFBF7] text-sm tracking-tight leading-tight group-hover:text-[#D49B5B] transition-colors">
-                PersonToPerson
+                Smart Stand
               </span>
               <span className="text-[10px] text-[#BFA08A] font-medium">
-                Permanent Business URL
+                Prestige Intelligence
               </span>
             </div>
           </Link>
@@ -226,7 +226,7 @@ export const Home: React.FC = () => {
                 <div className="bg-[#F5F2EB] pt-6 pb-2 px-3.5 border-b border-[#E8E1D5] flex items-center justify-between text-[11px] text-[#5C493B] font-mono relative z-10">
                   <div className="flex items-center gap-1.5 truncate">
                     <span className="text-[#5C493B] font-sans text-xs">🔒</span>
-                    <span className="truncate font-semibold text-[#1A120B]">persontoperson.com/b/example-business</span>
+                    <span className="truncate font-semibold text-[#1A120B]">smartstand.in/b/example-business</span>
                   </div>
                   <span className="shrink-0 ml-2 px-1.5 py-0.5 rounded-full bg-white text-[#8C7767] text-[9px] font-bold tracking-wider uppercase border border-[#E8E1D5]">
                     Preview
@@ -359,9 +359,9 @@ export const Home: React.FC = () => {
                   {/* Profile Footer */}
                   <div className="mt-4 pt-3 border-t border-[#E8E1D5] flex items-center justify-between text-[10px] text-[#5C493B]">
                     <span className="font-mono text-[9.5px] text-[#8C531B] font-semibold">
-                      persontoperson.com/b/example-business
+                      smartstand.in/b/example-business
                     </span>
-                    <span className="text-[#8C7767] text-[9px] font-medium">Permanent URL</span>
+                    <span className="text-[#8C7767] text-[9px] font-medium">Prestige Intelligence</span>
                   </div>
                 </div>
               </div>
@@ -405,14 +405,14 @@ export const Home: React.FC = () => {
               </ul>
             </div>
 
-            {/* Column 2: PersonToPerson */}
+            {/* Column 2: Smart Stand */}
             <div className="rounded-3xl p-8 bg-[#2E1F15] border border-[#D49B5B]/40 shadow-lg space-y-5 relative">
               <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#1B120B] text-[#D49B5B] border border-[#3D2B1F] text-[10px] font-bold uppercase tracking-wider">
-                Permanent Business URL
+                Prestige Intelligence
               </div>
 
               <h3 className="font-extrabold text-[#FDFBF7] text-lg">
-                PersonToPerson
+                Smart Stand
               </h3>
 
               <ul className="space-y-4 text-xs sm:text-sm text-[#FDFBF7]">
@@ -447,7 +447,7 @@ export const Home: React.FC = () => {
               <span>Simple 3-Step Setup</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#FDFBF7] tracking-tight">
-              How PersonToPerson Works
+              How Smart Stand Works
             </h2>
             <p className="mt-3 text-[#BFA08A] text-sm sm:text-base leading-relaxed">
               From account creation to physical deployment in three simple steps.
@@ -699,13 +699,16 @@ export const Home: React.FC = () => {
             {/* Brand column */}
             <div className="space-y-3 md:col-span-2">
               <div className="flex items-center gap-2.5 text-[#FDFBF7] font-extrabold text-sm">
-                <div className="w-7 h-7 rounded-lg bg-[#D49B5B] text-[#140D08] flex items-center justify-center font-bold shadow-xs">
-                  <LinkIcon className="w-3.5 h-3.5 text-[#140D08]" />
+                <div className="w-7 h-7 rounded-lg bg-[#241810] border border-[#3D2B1F] flex items-center justify-center p-0.5 shadow-xs overflow-hidden">
+                  <img src="/prestige-logo.png" alt="Prestige Intelligence" className="w-5.5 h-5.5 object-contain" />
                 </div>
-                <span>PersonToPerson</span>
+                <div className="flex flex-col">
+                  <span>Smart Stand</span>
+                  <span className="text-[10px] text-[#8C7767] font-normal">Prestige Intelligence</span>
+                </div>
               </div>
               <p className="text-[#BFA08A] text-xs max-w-sm leading-relaxed">
-                Permanent business URL and dynamic link platform for physical and local businesses.
+                Smart Stand by Prestige Intelligence — Premium dynamic links and permanent QR profile platform for modern businesses.
               </p>
             </div>
 
@@ -743,8 +746,8 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[#8C7767] text-[11px]">
-            <p>© {new Date().getFullYear()} PersonToPerson. All rights reserved.</p>
-            <p>Single Permanent Business URL Platform.</p>
+            <p>© {new Date().getFullYear()} Smart Stand · Prestige Intelligence. All rights reserved.</p>
+            <p>Smart Stand Dynamic Profile Platform.</p>
           </div>
         </div>
       </footer>

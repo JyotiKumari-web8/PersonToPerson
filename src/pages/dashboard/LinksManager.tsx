@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { linkService } from '@/services/linkService';
+import { authService } from '@/services/authService';
 import { BusinessLink, LinkType, BusinessSubscriptionDetails } from '@/types';
 import { planService } from '@/services/planService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/common/Card';
@@ -11,7 +12,7 @@ import { LinkModal } from '@/components/business/LinkModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert } from '@/components/common/Alert';
-import { Plus, Link2, AlertCircle } from 'lucide-react';
+import { Plus, Link2, AlertCircle, Smartphone, Mail } from 'lucide-react';
 
 export const LinksManager: React.FC = () => {
   const { business, isAdmin, isPlatformOwner } = useAuth();
@@ -21,6 +22,7 @@ export const LinksManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<BusinessLink | null>(null);
+  const [presetLinkType, setPresetLinkType] = useState<LinkType | undefined>(undefined);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadData = async () => {
@@ -46,12 +48,41 @@ export const LinksManager: React.FC = () => {
 
   const handleOpenAdd = () => {
     setEditingLink(null);
+    setPresetLinkType(undefined);
+    setModalOpen(true);
+  };
+
+  const handleOpenPayment = () => {
+    // Check if an existing upi_payment or payment link is already configured
+    const existingPayment = links.find((l) => l.link_type === 'upi_payment' || l.link_type === 'payment');
+    if (existingPayment) {
+      setEditingLink(existingPayment);
+      setPresetLinkType(undefined);
+    } else {
+      setEditingLink(null);
+      setPresetLinkType('upi_payment');
+    }
     setModalOpen(true);
   };
 
   const handleOpenEdit = (link: BusinessLink) => {
     setEditingLink(link);
+    setPresetLinkType(undefined);
     setModalOpen(true);
+  };
+
+  const handleContactAdmin = async () => {
+    try {
+      const adminEmail = await authService.getAdminEmail();
+      if (!adminEmail) return;
+      const subject = encodeURIComponent('Request to Increase Link Limit');
+      const body = encodeURIComponent(
+        `Hi Admin,\n\nMy link limit has been reached for "${business?.name || 'My Business'}" (Slug: /b/${business?.slug || ''}, Plan: ${subscription?.plan_name || 'Free'}).\n\nPlease increase my allowed link limit.\n\nThank you,\n${business?.name || ''}`
+      );
+      window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+    } catch (err) {
+      console.error('Failed to compose admin contact email:', err);
+    }
   };
 
   const handleSave = async (
@@ -149,6 +180,14 @@ export const LinksManager: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleOpenPayment}
+            icon={<Smartphone className="w-4 h-4 text-violet-400" />}
+          >
+            Payment
+          </Button>
+          <Button
             variant="primary"
             size="sm"
             onClick={handleOpenAdd}
@@ -169,7 +208,7 @@ export const LinksManager: React.FC = () => {
 
       {/* Plan Limit Banner (Only shown to normal business owners when limit reached; completely hidden for Platform Admin / Admin) */}
       {isLimitReached && (
-        <div className="p-4 bg-amber-950/30 rounded-2xl border border-amber-800/50 flex items-center justify-between gap-3 text-xs text-amber-200 shadow-sm">
+        <div className="p-4 bg-amber-950/30 rounded-2xl border border-amber-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200 shadow-sm">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
@@ -177,12 +216,14 @@ export const LinksManager: React.FC = () => {
               <strong>{maxLinks} active links</strong>.
             </span>
           </div>
-          <Link
-            to="/dashboard/settings"
-            className="text-[11px] text-[#D49B5B] hover:text-[#E2B176] font-semibold shrink-0 transition-colors inline-flex items-center gap-0.5"
+          <button
+            type="button"
+            onClick={handleContactAdmin}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-900/40 hover:bg-amber-900/70 border border-amber-800/60 text-[#D49B5B] hover:text-[#FBF9F5] font-bold text-xs transition-colors cursor-pointer self-start sm:self-auto"
           >
-            Contact Admin to upgrade &rsaquo;
-          </Link>
+            <Mail className="w-3.5 h-3.5 text-[#D49B5B]" />
+            <span>Contact Admin</span>
+          </button>
         </div>
       )}
 
@@ -249,10 +290,12 @@ export const LinksManager: React.FC = () => {
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
         initialLink={editingLink}
+        initialLinkType={presetLinkType}
         existingLinks={links}
         maxLinks={maxLinks}
         planName={subscription?.plan_name}
         isPrivileged={isPrivileged}
+        onContactAdmin={handleContactAdmin}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { PublicLinkCard } from './PublicLinkCard';
 import { SponsorCard } from './SponsorCard';
 import { SponsorHeader } from './SponsorHeader';
 import { getPublicBusinessUrl, copyToClipboard } from '@/lib/utils';
+import { GoogleGIcon } from '@/components/business/linkIcons';
 import {
   Phone,
   Mail,
@@ -85,6 +86,16 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const activeLinks = links.filter((l) => l.is_active);
+  const googleReviewLink = activeLinks.find((l) => l.link_type === 'google_review');
+  const customerRepeatLink = activeLinks.find(
+    (l) => l.link_type === 'customer_repeat' || (l.link_type as string) === 'smart_stand'
+  );
+  const otherActiveLinks = activeLinks.filter(
+    (l) =>
+      l.link_type !== 'google_review' &&
+      l.link_type !== 'customer_repeat' &&
+      (l.link_type as string) !== 'smart_stand'
+  );
   const effectiveFooterSponsors = footerSponsors !== undefined ? footerSponsors : sponsors;
 
   const handleShare = async () => {
@@ -297,7 +308,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
             </button>
           </div>
 
-          {/* Links Section Header: 🔗 Our Links                         3 links */}
+          {/* Links Section Header */}
           <div className="mt-6 mb-3 flex items-center justify-between px-1">
             <div className="flex items-center gap-2 text-sm font-bold text-[#2B1A12]">
               <span className="text-sm select-none" role="img" aria-label="Links">🔗</span>
@@ -308,28 +319,88 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
             </span>
           </div>
 
-          {/* Active Links: Adaptive Responsive Icon Grid */}
-          <div className="flex-1">
-            {activeLinks.length === 0 ? (
-              <div className="py-7 px-4 text-center rounded-2xl border border-dashed border-[#E4D2BB] bg-[#FFFDF9]/70 my-1">
-                <p className="text-sm font-bold text-[#2B1A12]">No links added yet</p>
-                <p className="text-xs text-[#705B4D] mt-1">
-                  Check back soon for official links.
-                </p>
-              </div>
+          {/* 1. Special Items: AI Google Review + Customer Repeat (ALWAYS Visible) */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-3">
+            {/* AI Google Review */}
+            {googleReviewLink ? (
+              <a
+                href={googleReviewLink.url}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onLinkClick(googleReviewLink.id, googleReviewLink.url);
+                }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-[#E8DCCB]/80 bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer text-center min-h-[92px]"
+                title="AI Google Review"
+              >
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-white border border-[#E4D2BB] flex items-center justify-center shadow-2xs p-2.5 shrink-0 mb-1.5 transition-transform group-hover:scale-105">
+                  <GoogleGIcon className="w-7.5 h-7.5 sm:w-8 sm:h-8" />
+                </div>
+                <span className="font-bold text-xs text-[#2B1A12] tracking-tight">AI Google Review</span>
+                <span className="text-[9.5px] font-semibold text-emerald-600 mt-0.5">Active</span>
+              </a>
             ) : (
               <div
+                className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-dashed border-[#E4D2BB]/70 bg-[#FAF3E7]/50 text-center min-h-[92px] opacity-60 cursor-not-allowed select-none"
+                title="AI Google Review (Not configured)"
+              >
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-white/70 border border-[#E4D2BB]/60 flex items-center justify-center shadow-2xs p-2.5 shrink-0 mb-1.5 grayscale opacity-75">
+                  <GoogleGIcon className="w-7.5 h-7.5 sm:w-8 sm:h-8" />
+                </div>
+                <span className="font-bold text-xs text-[#705B4D] tracking-tight">AI Google Review</span>
+                <span className="text-[9.5px] text-[#A8988B] font-medium mt-0.5">Not Configured</span>
+              </div>
+            )}
+
+            {/* Customer Repeat */}
+            {customerRepeatLink ? (
+              <a
+                href={customerRepeatLink.url || '#'}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onLinkClick(customerRepeatLink.id, customerRepeatLink.url || '#');
+                }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-[#E8DCCB]/80 bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer text-center min-h-[92px]"
+                title="Customer Repeat"
+              >
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shadow-2xs p-2 shrink-0 mb-1.5 transition-transform group-hover:scale-105 overflow-hidden">
+                  <img src="/prestige-logo.png" alt="Customer Repeat" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
+                </div>
+                <span className="font-bold text-xs text-[#2B1A12] tracking-tight">Customer Repeat</span>
+                <span className="text-[9.5px] font-semibold text-purple-600 mt-0.5">Active</span>
+              </a>
+            ) : (
+              <div
+                className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-dashed border-[#E4D2BB]/70 bg-[#FAF3E7]/50 text-center min-h-[92px] opacity-60 cursor-not-allowed select-none"
+                title="Customer Repeat (Not configured)"
+              >
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#241810]/60 border border-[#3D2B1F]/60 flex items-center justify-center shadow-2xs p-2 shrink-0 mb-1.5 grayscale opacity-75 overflow-hidden">
+                  <img src="/prestige-logo.png" alt="Customer Repeat" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
+                </div>
+                <span className="font-bold text-xs text-[#705B4D] tracking-tight">Customer Repeat</span>
+                <span className="text-[9.5px] text-[#A8988B] font-medium mt-0.5">Not Configured</span>
+              </div>
+            )}
+          </div>
+
+          {/* 2. Additional Configured Links: Adaptive Responsive Icon Grid */}
+          {otherActiveLinks.length > 0 && (
+            <div className="flex-1">
+              <div
                 className={`grid grid-cols-6 ${
-                  activeLinks.length <= 3
+                  otherActiveLinks.length <= 3
                     ? 'gap-2.5 sm:gap-3'
-                    : activeLinks.length <= 6
+                    : otherActiveLinks.length <= 6
                     ? 'gap-2 sm:gap-2.5'
                     : 'gap-1.5 sm:gap-2'
                 }`}
               >
-                {activeLinks.map((link, index) => {
-                  const colSpan = getTileColSpan(index, activeLinks.length);
-                  const sizeVariant = getTileSizeVariant(activeLinks.length);
+                {otherActiveLinks.map((link, index) => {
+                  const colSpan = getTileColSpan(index, otherActiveLinks.length);
+                  const sizeVariant = getTileSizeVariant(otherActiveLinks.length);
 
                   return (
                     <div key={link.id} className={colSpan}>
@@ -342,8 +413,8 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
                   );
                 })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Bottom Sponsors Section: Deep Chocolate Panel (As in Reference UI) */}
           {effectiveFooterSponsors.length > 0 && (
@@ -389,7 +460,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
               )}
             </button>
             <span className="text-[10.5px] text-[#705B4D]/80 font-medium">
-              PersonToPerson Digital Business Profile
+              Smart Stand by Prestige Intelligence
             </span>
           </div>
 
