@@ -214,7 +214,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
         setError('Please enter your UPI ID (e.g. 9934958764@ybl).');
         return;
       }
-      const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/;
       if (!upiPattern.test(trimmedUrl)) {
         setError('Please enter a valid UPI ID (e.g. 9934958764@ybl or business@okaxis).');
         return;

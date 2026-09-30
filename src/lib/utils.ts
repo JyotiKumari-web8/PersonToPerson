@@ -25,7 +25,7 @@ export function isValidUrl(urlString: string, type?: LinkType): boolean {
 
   if (type === 'upi_payment' || type === 'payment' || isUpiLink(type, trimmed)) {
     const cleanUpi = extractUpiId(trimmed);
-    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(cleanUpi);
+    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/.test(cleanUpi);
   }
 
   if (type === 'whatsapp') {
@@ -154,7 +154,7 @@ export function isUpiLink(type?: LinkType | string, url?: string): boolean {
   const trimmed = url.trim().toLowerCase();
   if (trimmed.startsWith('upi://')) return true;
   const clean = extractUpiId(url);
-  return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(clean);
+  return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/.test(clean);
 }
 
 /**
@@ -187,21 +187,31 @@ export function extractUpiId(input: string): string {
 }
 
 /**
- * Constructs a complete, standard generic UPI URI: upi://pay?pa=...&pn=...&cu=INR
- * Example: upi://pay?pa=9934958764%40ybl&pn=Instant&cu=INR
+ * Constructs a standard generic UPI URI: upi://pay?pa=...&pn=...&cu=INR
+ * Example: upi://pay?pa=9934958764@ybl&pn=Instant&cu=INR
+ * 
+ * IMPORTANT:
+ * The UPI ID (VPA) in 'pa' must retain its literal '@' symbol (e.g. business@oksbi or 9934958764@ybl).
+ * Percent-encoding '@' as '%40' prevents UPI apps (Google Pay, PhonePe, Paytm, BHIM)
+ * from parsing the VPA, causing "Your payment is declined for security reasons".
  */
 export function buildUpiUri(rawInput: string, businessName?: string): string {
   const upiId = extractUpiId(rawInput);
   if (!upiId) return '';
 
-  const cleanPn = (businessName || '').trim();
-  const encodedPa = encodeURIComponent(upiId);
-  const encodedPn = encodeURIComponent(cleanPn);
+  const atIndex = upiId.lastIndexOf('@');
+  if (atIndex <= 0 || atIndex === upiId.length - 1) return '';
 
-  if (encodedPn) {
-    return `upi://pay?pa=${encodedPa}&pn=${encodedPn}&cu=INR`;
+  const user = encodeURIComponent(upiId.substring(0, atIndex));
+  const handle = encodeURIComponent(upiId.substring(atIndex + 1));
+  const safePa = `${user}@${handle}`;
+
+  const cleanPn = (businessName || '').trim().slice(0, 50);
+  if (cleanPn) {
+    const encodedPn = encodeURIComponent(cleanPn);
+    return `upi://pay?pa=${safePa}&pn=${encodedPn}&cu=INR`;
   }
-  return `upi://pay?pa=${encodedPa}&cu=INR`;
+  return `upi://pay?pa=${safePa}&cu=INR`;
 }
 
 /**
