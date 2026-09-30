@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { businessService } from '@/services/businessService';
 import { linkService } from '@/services/linkService';
 import { sponsorService } from '@/services/sponsorService';
 import { analyticsService } from '@/services/analyticsService';
-import { Business, BusinessLink, Sponsor } from '@/types';
+import { Business, BusinessLink, Sponsor, LinkType } from '@/types';
 import { PublicProfileView } from '@/components/public/PublicProfileView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { Building2, Home, ShieldAlert } from 'lucide-react';
+import { Building2, Home, ShieldAlert, Smartphone } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { buildUpiUri, extractUpiId, isUpiLink } from '@/lib/utils';
 
 export const PublicProfilePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -20,6 +21,8 @@ export const PublicProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
+  const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
+  const noticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     async function loadPublicProfile() {
@@ -115,30 +118,49 @@ export const PublicProfilePage: React.FC = () => {
     loadPublicProfile();
   }, [slug]);
 
-  const handleLinkClick = async (linkId: string, url: string) => {
+  const handleLinkClick = async (linkId: string, url: string, linkType?: LinkType) => {
     if (business) {
       analyticsService.trackLinkClick(business.id, linkId);
     }
     if (!url || url === '#') return;
 
-    // UPI Payment flow: launch external UPI handler directly without opening empty tabs
-    if (url.startsWith('upi://')) {
-      window.location.href = url;
+    // Detect UPI Payment flow
+    const isUpi = isUpiLink(linkType, url);
+
+    if (isUpi) {
+      const cleanUpi = extractUpiId(url);
+      if (!cleanUpi) return;
+
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+
+      if (isMobile) {
+        const upiUri = buildUpiUri(cleanUpi, business?.name);
+        if (upiUri) {
+          window.location.href = upiUri;
+        }
+      } else {
+        setDesktopNotice('UPI payment is available on mobile devices.');
+        if (noticeTimeoutRef.current) clearTimeout(noticeTimeoutRef.current);
+        noticeTimeoutRef.current = setTimeout(() => setDesktopNotice(null), 4000);
+      }
       return;
     }
 
-    if (
-      url.includes('@') &&
-      !url.startsWith('http://') &&
-      !url.startsWith('https://') &&
-      !url.startsWith('mailto:')
-    ) {
-      const upiUri = `upi://pay?pa=${encodeURIComponent(url.trim())}&pn=${encodeURIComponent(business?.name || '')}&cu=INR`;
-      window.location.href = upiUri;
+    // Call / tel protocol
+    if (linkType === 'call' || url.startsWith('tel:')) {
+      window.location.href = url.startsWith('tel:') ? url : `tel:${url.replace(/[^\d+]/g, '')}`;
       return;
     }
 
-    // Safely open external link
+    // Email / mailto protocol
+    if (linkType === 'email' || url.startsWith('mailto:')) {
+      window.location.href = url.startsWith('mailto:') ? url : `mailto:${url}`;
+      return;
+    }
+
+    // Safely open standard external link
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -216,14 +238,34 @@ export const PublicProfilePage: React.FC = () => {
   }
 
   return (
-    <PublicProfileView
-      business={business}
-      links={links}
-      sponsors={footerSponsors}
-      headerSponsors={headerSponsors}
-      footerSponsors={footerSponsors}
-      onLinkClick={handleLinkClick}
-      onSponsorClick={handleSponsorClick}
-    />
+    <>
+      <PublicProfileView
+        business={business}
+        links={links}
+        sponsors={footerSponsors}
+        headerSponsors={headerSponsors}
+        footerSponsors={footerSponsors}
+        onLinkClick={handleLinkClick}
+        onSponsorClick={handleSponsorClick}
+      />
+
+      {/* Small clear message on desktop/laptop */}
+      {desktopNotice && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#241810]/95 backdrop-blur-xs border border-[#D49B5B]/50 shadow-lg text-white text-xs">
+            <Smartphone className="w-4 h-4 text-[#D49B5B] shrink-0" />
+            <span className="font-semibold text-[#FBF9F5]">{desktopNotice}</span>
+            <button
+              type="button"
+              onClick={() => setDesktopNotice(null)}
+              className="ml-1 text-[#9E8E81] hover:text-[#FBF9F5] text-xs leading-none p-0.5 cursor-pointer"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };

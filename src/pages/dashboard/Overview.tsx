@@ -4,6 +4,7 @@ import { linkService } from '@/services/linkService';
 import { analyticsService } from '@/services/analyticsService';
 import { BusinessLink, AnalyticsSummary, BusinessSubscriptionDetails } from '@/types';
 import { planService } from '@/services/planService';
+import { buildUpiUri, isUpiLink } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { LINK_TYPE_CONFIG } from '@/components/business/linkIcons';
@@ -235,14 +236,24 @@ export const Overview: React.FC = () => {
                               {link.is_active ? 'Active' : 'Hidden'}
                             </span>
                           </div>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 text-[#9E8E81] hover:text-[#D49B5B] rounded-lg hover:bg-[#2E1F15] transition-colors"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
+                          {isUpiLink(link.link_type, link.url) ? (
+                            <a
+                              href={buildUpiUri(link.url, business.name)}
+                              className="p-1.5 text-[#9E8E81] hover:text-[#D49B5B] rounded-lg hover:bg-[#2E1F15] transition-colors"
+                              title="UPI Payment URI"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          ) : (
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-[#9E8E81] hover:text-[#D49B5B] rounded-lg hover:bg-[#2E1F15] transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
                         </div>
                       </div>
                     );

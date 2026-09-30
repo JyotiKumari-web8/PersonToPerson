@@ -19,10 +19,12 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
+import { buildUpiUri, extractUpiId, isUpiLink } from '@/lib/utils';
 
 interface PublicLinkCardProps {
   link: BusinessLink;
-  onLinkClick: (linkId: string, url: string) => void;
+  businessName?: string;
+  onLinkClick: (linkId: string, url: string, linkType?: LinkType) => void;
   sizeVariant?: 'large' | 'medium' | 'compact';
 }
 
@@ -107,12 +109,13 @@ const DEFAULT_TYPE_SHORT_TITLES: Record<LinkType, string> = {
 
 export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
   link,
+  businessName,
   onLinkClick,
   sizeVariant = 'medium',
 }) => {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    onLinkClick(link.id, link.url);
+    onLinkClick(link.id, link.url, link.link_type);
   };
 
   const rawLabel = (link.label || '').trim();
@@ -262,11 +265,42 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     },
   }[sizeVariant];
 
+  const isUpi = isUpiLink(link.link_type, link.url);
+  const cleanUpi = isUpi ? extractUpiId(link.url) : '';
+  const isInactive = isUpi && !cleanUpi;
+
+  const isCustomProtocol =
+    isUpi ||
+    link.link_type === 'call' ||
+    link.link_type === 'email';
+
+  const resolvedHref =
+    isUpi
+      ? buildUpiUri(cleanUpi, businessName)
+      : link.url || '#';
+
+  if (isInactive) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#E4D2BB]/70 bg-[#FAF3E7]/50 opacity-60 cursor-not-allowed select-none text-center w-full h-full ${sizeClasses.card}`}
+        title={`${displayTitle} (Not configured)`}
+      >
+        <div className={`shrink-0 grayscale opacity-75 ${sizeClasses.iconWrap}`}>
+          {renderTileIcon(link.link_type)}
+        </div>
+        <span className={`font-bold text-[#705B4D] truncate max-w-full tracking-tight px-0.5 ${sizeClasses.text}`}>
+          {displayTitle}
+        </span>
+        <span className="text-[9.5px] text-[#A8988B] font-medium mt-0.5">Not Configured</span>
+      </div>
+    );
+  }
+
   return (
     <a
-      href={link.url || '#'}
+      href={resolvedHref}
       onClick={handleClick}
-      target="_blank"
+      target={isCustomProtocol ? undefined : '_blank'}
       rel="noopener noreferrer"
       className={`group flex flex-col items-center justify-center rounded-2xl border border-[#E8DCCB]/80 bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer select-none text-center w-full h-full ${sizeClasses.card}`}
       title={displayTitle}

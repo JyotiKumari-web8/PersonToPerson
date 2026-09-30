@@ -23,6 +23,11 @@ export function isValidUrl(urlString: string, type?: LinkType): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
   }
 
+  if (type === 'upi_payment' || type === 'payment' || isUpiLink(type, trimmed)) {
+    const cleanUpi = extractUpiId(trimmed);
+    return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(cleanUpi);
+  }
+
   if (type === 'whatsapp') {
     // Can be wa.me link, api.whatsapp.com, chat/web whatsapp, or international phone number
     if (/^(https?:\/\/)?(wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com|web\.whatsapp\.com)\/.+/i.test(trimmed)) {
@@ -129,11 +134,74 @@ export function normalizeUrl(url: string, type?: LinkType): string {
     }
   }
 
+  if (type === 'upi_payment' || type === 'payment' || isUpiLink(type, trimmed)) {
+    return extractUpiId(trimmed);
+  }
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
   }
 
   return `https://${trimmed}`;
+}
+
+/**
+ * Detects whether a link is a UPI payment link based on platform type or URL content
+ */
+export function isUpiLink(type?: LinkType | string, url?: string): boolean {
+  if (type === 'upi_payment' || type === 'payment') return true;
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('upi://')) return true;
+  const clean = extractUpiId(url);
+  return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(clean);
+}
+
+/**
+ * Extracts a clean UPI ID / VPA from any raw string, legacy URL, or UPI URI
+ */
+export function extractUpiId(input: string): string {
+  const trimmed = (input || '').trim();
+  if (!trimmed) return '';
+
+  // If already upi://pay URI
+  if (trimmed.toLowerCase().startsWith('upi://pay')) {
+    try {
+      const search = trimmed.split('?')[1] || '';
+      const params = new URLSearchParams(search);
+      const pa = params.get('pa');
+      if (pa) return decodeURIComponent(pa).trim();
+    } catch {
+      // Fallback
+    }
+  }
+
+  // Strip http://, https://, mailto:, trailing slashes
+  return trimmed
+    .replace(/^https?:\/\//i, '')
+    .replace(/^mailto:/i, '')
+    .replace(/^\/+/, '')
+    .replace(/\/+$/, '')
+    .split('?')[0]
+    .trim();
+}
+
+/**
+ * Constructs a complete, standard generic UPI URI: upi://pay?pa=...&pn=...&cu=INR
+ * Example: upi://pay?pa=9934958764%40ybl&pn=Instant&cu=INR
+ */
+export function buildUpiUri(rawInput: string, businessName?: string): string {
+  const upiId = extractUpiId(rawInput);
+  if (!upiId) return '';
+
+  const cleanPn = (businessName || '').trim();
+  const encodedPa = encodeURIComponent(upiId);
+  const encodedPn = encodeURIComponent(cleanPn);
+
+  if (encodedPn) {
+    return `upi://pay?pa=${encodedPa}&pn=${encodedPn}&cu=INR`;
+  }
+  return `upi://pay?pa=${encodedPa}&cu=INR`;
 }
 
 /**

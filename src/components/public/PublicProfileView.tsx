@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Business, BusinessLink, Sponsor } from '@/types';
+import { Business, BusinessLink, Sponsor, LinkType } from '@/types';
 import { PublicLinkCard } from './PublicLinkCard';
 import { SponsorCard } from './SponsorCard';
 import { SponsorHeader } from './SponsorHeader';
@@ -23,7 +23,7 @@ interface PublicProfileViewProps {
   sponsors?: Sponsor[];
   headerSponsors?: Sponsor[];
   footerSponsors?: Sponsor[];
-  onLinkClick: (linkId: string, url: string) => void;
+  onLinkClick: (linkId: string, url: string, linkType?: LinkType) => void;
   onSponsorClick: (sponsorId: string, url: string) => void;
 }
 
@@ -406,6 +406,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
                     <div key={link.id} className={colSpan}>
                       <PublicLinkCard
                         link={link}
+                        businessName={business.name}
                         onLinkClick={onLinkClick}
                         sizeVariant={sizeVariant}
                       />
