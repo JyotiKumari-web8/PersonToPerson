@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { businessService } from '@/services/businessService';
 import { linkService } from '@/services/linkService';
@@ -7,9 +7,10 @@ import { analyticsService } from '@/services/analyticsService';
 import { Business, BusinessLink, Sponsor, LinkType } from '@/types';
 import { PublicProfileView } from '@/components/public/PublicProfileView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { Building2, Home, ShieldAlert, Smartphone } from 'lucide-react';
+import { Building2, Home, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { buildUpiUri, extractUpiId, isUpiLink } from '@/lib/utils';
+import { UpiPaymentModal } from '@/components/public/UpiPaymentModal';
 
 export const PublicProfilePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -21,10 +22,11 @@ export const PublicProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
-  const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
-  const [noticeUpi, setNoticeUpi] = useState<string | null>(null);
-  const [hasCopiedNotice, setHasCopiedNotice] = useState(false);
-  const noticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [paymentModalData, setPaymentModalData] = useState<{
+    upiId: string;
+    upiUri: string;
+    businessName: string;
+  } | null>(null);
 
   useEffect(() => {
     async function loadPublicProfile() {
@@ -133,40 +135,24 @@ export const PublicProfilePage: React.FC = () => {
       const cleanUpi = extractUpiId(url);
       if (!cleanUpi) return;
 
+      const upiUri = buildUpiUri(cleanUpi, business?.name);
+      if (!upiUri) return;
+
       const isMobile =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
         (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
 
       if (isMobile) {
-        const upiUri = buildUpiUri(cleanUpi, business?.name);
-        if (upiUri) {
-          window.location.href = upiUri;
-
-          // Graceful fallback: if device has no UPI app or cannot handle the intent,
-          // the page remains visible in foreground. Notify after 2.5s with copy option.
-          if (noticeTimeoutRef.current) clearTimeout(noticeTimeoutRef.current);
-          noticeTimeoutRef.current = setTimeout(() => {
-            if (document.visibilityState === 'visible') {
-              setDesktopNotice("If your UPI app didn't open, you can copy the UPI ID to pay:");
-              setNoticeUpi(cleanUpi);
-              setHasCopiedNotice(false);
-              noticeTimeoutRef.current = setTimeout(() => {
-                setDesktopNotice(null);
-                setNoticeUpi(null);
-              }, 8000);
-            }
-          }, 2500);
-        }
-      } else {
-        setDesktopNotice('UPI payment is available on mobile devices.');
-        setNoticeUpi(cleanUpi);
-        setHasCopiedNotice(false);
-        if (noticeTimeoutRef.current) clearTimeout(noticeTimeoutRef.current);
-        noticeTimeoutRef.current = setTimeout(() => {
-          setDesktopNotice(null);
-          setNoticeUpi(null);
-        }, 5000);
+        // Attempt the standard UPI payment flow directly
+        window.location.href = upiUri;
       }
+
+      // Open the UPI Payment Sheet/Modal with pre-filled Businessman UPI ID & dynamic fallback QR
+      setPaymentModalData({
+        upiId: cleanUpi,
+        upiUri,
+        businessName: business?.name || 'Business',
+      });
       return;
     }
 
@@ -271,38 +257,15 @@ export const PublicProfilePage: React.FC = () => {
         onSponsorClick={handleSponsorClick}
       />
 
-      {/* Small clear message on desktop/laptop or mobile fallback */}
-      {desktopNotice && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[92vw]">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[#241810]/95 backdrop-blur-xs border border-[#D49B5B]/50 shadow-xl text-white text-xs whitespace-nowrap">
-            <Smartphone className="w-4 h-4 text-[#D49B5B] shrink-0" />
-            <span className="font-semibold text-[#FBF9F5] truncate">{desktopNotice}</span>
-            {noticeUpi && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(noticeUpi);
-                  setHasCopiedNotice(true);
-                  setTimeout(() => setHasCopiedNotice(false), 2000);
-                }}
-                className="ml-1 px-2.5 py-0.5 rounded-full bg-[#D49B5B] text-[#241810] font-bold text-[11px] hover:bg-[#E5AA6A] transition-colors cursor-pointer shrink-0"
-              >
-                {hasCopiedNotice ? 'Copied!' : `Copy: ${noticeUpi}`}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setDesktopNotice(null);
-                setNoticeUpi(null);
-              }}
-              className="ml-1 text-[#9E8E81] hover:text-[#FBF9F5] text-xs leading-none p-1 cursor-pointer"
-              aria-label="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+      {/* Direct UPI Payment Modal with fallback QR & 1-tap app launch */}
+      {paymentModalData && (
+        <UpiPaymentModal
+          isOpen={Boolean(paymentModalData)}
+          onClose={() => setPaymentModalData(null)}
+          upiId={paymentModalData.upiId}
+          businessName={paymentModalData.businessName}
+          upiUri={paymentModalData.upiUri}
+        />
       )}
     </>
   );

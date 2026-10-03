@@ -187,15 +187,15 @@ export function extractUpiId(input: string): string {
 }
 
 /**
- * Constructs a standard generic UPI URI: upi://pay?pa=<UPI_ID>&cu=INR
- * Example: upi://pay?pa=9934958764@ybl&cu=INR
+ * Constructs a standard generic UPI URI: upi://pay?pa=<UPI_ID>&pn=<BUSINESS_NAME>&cu=INR
+ * Example: upi://pay?pa=9934958764@ybl&pn=Sharma%20Store&cu=INR
  * 
- * IMPORTANT:
- * The UPI ID (VPA) in 'pa' must retain its literal '@' symbol (e.g. business@oksbi or 9934958764@ybl).
- * Payee name (pn) is omitted to allow UPI apps (Google Pay, PhonePe, Paytm) to resolve the verified
- * beneficiary name directly from NPCI, preventing "declined for security reasons" payee-mismatch flags.
+ * NPCI UPI Specification:
+ * - 'pa': Payee VPA / UPI ID (retains literal '@', e.g. shop@oksbi)
+ * - 'pn': Payee Name (URL-encoded, up to 50 chars)
+ * - 'cu': Currency ('INR')
  */
-export function buildUpiUri(rawInput: string, _businessName?: string): string {
+export function buildUpiUri(rawInput: string, businessName?: string): string {
   const upiId = extractUpiId(rawInput);
   if (!upiId) return '';
 
@@ -206,7 +206,10 @@ export function buildUpiUri(rawInput: string, _businessName?: string): string {
   const handle = encodeURIComponent(upiId.substring(atIndex + 1));
   const safePa = `${user}@${handle}`;
 
-  return `upi://pay?pa=${safePa}&cu=INR`;
+  const payee = (businessName || '').trim() || 'Business';
+  const safePn = encodeURIComponent(payee.slice(0, 50));
+
+  return `upi://pay?pa=${safePa}&pn=${safePn}&cu=INR`;
 }
 
 /**
