@@ -138,14 +138,8 @@ export const PublicProfilePage: React.FC = () => {
       const upiUri = buildUpiUri(cleanUpi, business?.name);
       if (!upiUri) return;
 
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
-
-      if (isMobile) {
-        // Attempt the standard UPI payment flow directly
-        window.location.href = upiUri;
-      }
+      // The native <a href={resolvedHref}> in PublicLinkCard triggers the standard UPI intent directly on mobile.
+      // We do not do window.location.href = upiUri here to prevent duplicate intent requests.
 
       // Open the UPI Payment Sheet/Modal with pre-filled Businessman UPI ID & dynamic fallback QR
       setPaymentModalData({
@@ -156,15 +150,13 @@ export const PublicProfilePage: React.FC = () => {
       return;
     }
 
-    // Call / tel protocol
+    // Call / tel protocol (handled natively by <a href="tel:...">)
     if (linkType === 'call' || url.startsWith('tel:')) {
-      window.location.href = url.startsWith('tel:') ? url : `tel:${url.replace(/[^\d+]/g, '')}`;
       return;
     }
 
-    // Email / mailto protocol
+    // Email / mailto protocol (handled natively by <a href="mailto:...">)
     if (linkType === 'email' || url.startsWith('mailto:')) {
-      window.location.href = url.startsWith('mailto:') ? url : `mailto:${url}`;
       return;
     }
 

@@ -113,9 +113,41 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
   onLinkClick,
   sizeVariant = 'medium',
 }) => {
+  const isUpi = isUpiLink(link.link_type, link.url);
+  const cleanUpi = isUpi ? extractUpiId(link.url) : '';
+  const isInactive = isUpi && !cleanUpi;
+
+  const isCustomProtocol =
+    isUpi ||
+    link.link_type === 'call' ||
+    link.link_type === 'email';
+
+  const resolvedHref =
+    isUpi
+      ? buildUpiUri(cleanUpi, businessName)
+      : link.url || '#';
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+    // Track link click analytics for the business
     onLinkClick(link.id, link.url, link.link_type);
+
+    // Allow native browser intent handling for custom protocols (UPI payments, phone calls, emails).
+    // Calling preventDefault() suppresses the browser's native user gesture, which breaks Android's UPI intent resolution.
+    if (isCustomProtocol) {
+      // On iOS: iOS Safari does not support the generic Android upi:// intent and errors out with "Something went wrong".
+      // Prevent default on iOS for UPI so the clean payment sheet with dynamic QR & pre-filled UPI ID displays seamlessly.
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      if (isUpi && isIOS) {
+        e.preventDefault();
+        return;
+      }
+      return;
+    }
+
+    e.preventDefault();
   };
 
   const rawLabel = (link.label || '').trim();
@@ -265,19 +297,6 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     },
   }[sizeVariant];
 
-  const isUpi = isUpiLink(link.link_type, link.url);
-  const cleanUpi = isUpi ? extractUpiId(link.url) : '';
-  const isInactive = isUpi && !cleanUpi;
-
-  const isCustomProtocol =
-    isUpi ||
-    link.link_type === 'call' ||
-    link.link_type === 'email';
-
-  const resolvedHref =
-    isUpi
-      ? buildUpiUri(cleanUpi, businessName)
-      : link.url || '#';
 
   if (isInactive) {
     return (

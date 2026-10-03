@@ -206,8 +206,11 @@ export function buildUpiUri(rawInput: string, businessName?: string): string {
   const handle = encodeURIComponent(upiId.substring(atIndex + 1));
   const safePa = `${user}@${handle}`;
 
-  const payee = (businessName || '').trim() || 'Business';
-  const safePn = encodeURIComponent(payee.slice(0, 50));
+  const cleanPayee = (businessName || '')
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'Business';
+  const safePn = encodeURIComponent(cleanPayee.slice(0, 50));
 
   return `upi://pay?pa=${safePa}&pn=${safePn}&cu=INR`;
 }
