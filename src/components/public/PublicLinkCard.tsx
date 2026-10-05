@@ -10,7 +10,6 @@ import {
 import {
   Globe,
   MapPin,
-  CreditCard,
   Calendar,
   Utensils,
   GraduationCap,
@@ -19,7 +18,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import { buildUpiUri, extractUpiId, isUpiLink } from '@/lib/utils';
+import { isPaymentOrUpiLink } from '@/lib/utils';
 
 interface PublicLinkCardProps {
   link: BusinessLink;
@@ -62,13 +61,8 @@ const VERBOSE_TO_SHORT_TITLE: Record<string, string> = {
   'google maps': 'Maps',
   'view on google maps': 'Maps',
   'maps': 'Maps',
-  'pay via upi': 'Payment',
-  'upi payment': 'Payment',
-  'pay online': 'Payment',
-  'pay online securely': 'Payment',
-  'payment': 'Payment',
-  'customer repeat': 'Customer Repeat',
-  'smart stand': 'Customer Repeat',
+  'customer repeat': 'Repeat Customer',
+  'smart stand': 'Repeat Customer',
   'book an appointment': 'Booking',
   'booking': 'Booking',
   'book now': 'Booking',
@@ -94,56 +88,40 @@ const DEFAULT_TYPE_SHORT_TITLES: Record<LinkType, string> = {
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
   google_maps: 'Maps',
-  upi_payment: 'Payment',
-  payment: 'Payment',
+  upi_payment: '',
+  payment: '',
   booking: 'Booking',
   call: 'Call',
   email: 'Email',
   menu: 'Menu',
   admission: 'Admission',
   portfolio: 'Portfolio',
-  customer_repeat: 'Customer Repeat',
-  smart_stand: 'Customer Repeat',
+  customer_repeat: 'Repeat Customer',
+  smart_stand: 'Repeat Customer',
   custom: 'Link',
 };
 
 export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
   link,
-  businessName,
+  businessName: _businessName,
   onLinkClick,
   sizeVariant = 'medium',
 }) => {
-  const isUpi = isUpiLink(link.link_type, link.url);
-  const cleanUpi = isUpi ? extractUpiId(link.url) : '';
-  const isInactive = isUpi && !cleanUpi;
+  if (isPaymentOrUpiLink(link)) {
+    return null;
+  }
 
   const isCustomProtocol =
-    isUpi ||
     link.link_type === 'call' ||
     link.link_type === 'email';
 
-  const resolvedHref =
-    isUpi
-      ? buildUpiUri(cleanUpi, businessName)
-      : link.url || '#';
+  const resolvedHref = link.url || '#';
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Track link click analytics for the business
     onLinkClick(link.id, link.url, link.link_type);
 
-    // Allow native browser intent handling for custom protocols (UPI payments, phone calls, emails).
-    // Calling preventDefault() suppresses the browser's native user gesture, which breaks Android's UPI intent resolution.
     if (isCustomProtocol) {
-      // On iOS: iOS Safari does not support the generic Android upi:// intent and errors out with "Something went wrong".
-      // Prevent default on iOS for UPI so the clean payment sheet with dynamic QR & pre-filled UPI ID displays seamlessly.
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      if (isUpi && isIOS) {
-        e.preventDefault();
-        return;
-      }
       return;
     }
 
@@ -214,23 +192,11 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
             <MapPin className={`${iconClasses} text-[#EA4335]`} />
           </div>
         );
-      case 'upi_payment':
-        return (
-          <div className={`${badgeClasses} bg-[#7C3AED] text-white flex items-center justify-center shadow-2xs`}>
-            <CreditCard className={`${iconClasses} text-white`} />
-          </div>
-        );
-      case 'payment':
-        return (
-          <div className={`${badgeClasses} bg-[#059669] text-white flex items-center justify-center shadow-2xs`}>
-            <CreditCard className={`${iconClasses} text-white`} />
-          </div>
-        );
       case 'customer_repeat':
       case 'smart_stand':
         return (
           <div className={`${badgeClasses} bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shadow-2xs p-2 overflow-hidden`}>
-            <img src="/prestige-logo.png" alt="Customer Repeat" className={`${iconClasses} object-contain`} />
+            <img src="/prestige-logo.png" alt="Repeat Customer" className={`${iconClasses} object-contain`} />
           </div>
         );
       case 'booking':
@@ -297,23 +263,6 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({
     },
   }[sizeVariant];
 
-
-  if (isInactive) {
-    return (
-      <div
-        className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#E4D2BB]/70 bg-[#FAF3E7]/50 opacity-60 cursor-not-allowed select-none text-center w-full h-full ${sizeClasses.card}`}
-        title={`${displayTitle} (Not configured)`}
-      >
-        <div className={`shrink-0 grayscale opacity-75 ${sizeClasses.iconWrap}`}>
-          {renderTileIcon(link.link_type)}
-        </div>
-        <span className={`font-bold text-[#705B4D] truncate max-w-full tracking-tight px-0.5 ${sizeClasses.text}`}>
-          {displayTitle}
-        </span>
-        <span className="text-[9.5px] text-[#A8988B] font-medium mt-0.5">Not Configured</span>
-      </div>
-    );
-  }
 
   return (
     <a

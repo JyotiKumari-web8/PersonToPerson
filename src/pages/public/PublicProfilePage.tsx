@@ -9,8 +9,7 @@ import { PublicProfileView } from '@/components/public/PublicProfileView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Building2, Home, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/common/Button';
-import { buildUpiUri, extractUpiId, isUpiLink } from '@/lib/utils';
-import { UpiPaymentModal } from '@/components/public/UpiPaymentModal';
+import { isPaymentOrUpiLink } from '@/lib/utils';
 
 export const PublicProfilePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,11 +21,6 @@ export const PublicProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
-  const [paymentModalData, setPaymentModalData] = useState<{
-    upiId: string;
-    upiUri: string;
-    businessName: string;
-  } | null>(null);
 
   useEffect(() => {
     async function loadPublicProfile() {
@@ -54,7 +48,7 @@ export const PublicProfilePage: React.FC = () => {
             sponsorService.getBusinessSponsors(biz.id),
           ]);
 
-          setLinks(bizLinks);
+          setLinks(bizLinks.filter((l) => !isPaymentOrUpiLink(l)));
 
           // Filter active assignments with active sponsor objects, excluding self-sponsorship
           const activeBizSponsors = bizSponsors.filter((bs) => {
@@ -127,28 +121,6 @@ export const PublicProfilePage: React.FC = () => {
       analyticsService.trackLinkClick(business.id, linkId);
     }
     if (!url || url === '#') return;
-
-    // Detect UPI Payment flow
-    const isUpi = isUpiLink(linkType, url);
-
-    if (isUpi) {
-      const cleanUpi = extractUpiId(url);
-      if (!cleanUpi) return;
-
-      const upiUri = buildUpiUri(cleanUpi, business?.name);
-      if (!upiUri) return;
-
-      // The native <a href={resolvedHref}> in PublicLinkCard triggers the standard UPI intent directly on mobile.
-      // We do not do window.location.href = upiUri here to prevent duplicate intent requests.
-
-      // Open the UPI Payment Sheet/Modal with pre-filled Businessman UPI ID & dynamic fallback QR
-      setPaymentModalData({
-        upiId: cleanUpi,
-        upiUri,
-        businessName: business?.name || 'Business',
-      });
-      return;
-    }
 
     // Call / tel protocol (handled natively by <a href="tel:...">)
     if (linkType === 'call' || url.startsWith('tel:')) {
@@ -238,27 +210,14 @@ export const PublicProfilePage: React.FC = () => {
   }
 
   return (
-    <>
-      <PublicProfileView
-        business={business}
-        links={links}
-        sponsors={footerSponsors}
-        headerSponsors={headerSponsors}
-        footerSponsors={footerSponsors}
-        onLinkClick={handleLinkClick}
-        onSponsorClick={handleSponsorClick}
-      />
-
-      {/* Direct UPI Payment Modal with fallback QR & 1-tap app launch */}
-      {paymentModalData && (
-        <UpiPaymentModal
-          isOpen={Boolean(paymentModalData)}
-          onClose={() => setPaymentModalData(null)}
-          upiId={paymentModalData.upiId}
-          businessName={paymentModalData.businessName}
-          upiUri={paymentModalData.upiUri}
-        />
-      )}
-    </>
+    <PublicProfileView
+      business={business}
+      links={links}
+      sponsors={footerSponsors}
+      headerSponsors={headerSponsors}
+      footerSponsors={footerSponsors}
+      onLinkClick={handleLinkClick}
+      onSponsorClick={handleSponsorClick}
+    />
   );
 };

@@ -158,6 +158,49 @@ export function isUpiLink(type?: LinkType | string, url?: string): boolean {
 }
 
 /**
+ * Checks whether a link object represents a payment or UPI link in any format
+ */
+export function isPaymentOrUpiLink(link?: { link_type?: string; label?: string; url?: string } | null): boolean {
+  if (!link) return false;
+
+  const type = (link.link_type || '').trim().toLowerCase();
+  if (
+    type === 'payment' ||
+    type === 'upi_payment' ||
+    type === 'upi' ||
+    type.includes('payment') ||
+    type.includes('upi')
+  ) {
+    return true;
+  }
+
+  const label = (link.label || '').trim().toLowerCase();
+  if (
+    label === 'payment' ||
+    label === 'upi payment' ||
+    label === 'pay via upi' ||
+    label === 'pay online' ||
+    label === 'pay online securely' ||
+    label === 'sample payment link' ||
+    label.includes('payment') ||
+    label.includes('pay via upi') ||
+    label.includes('upi payment') ||
+    label === 'upi'
+  ) {
+    return true;
+  }
+
+  const url = (link.url || '').trim().toLowerCase();
+  if (url.startsWith('upi://')) return true;
+  if (url.includes('paypal.me') || url.includes('stripe.com') || url.includes('razorpay') || url.includes('cash.app')) {
+    return true;
+  }
+  if (isUpiLink(link.link_type, link.url)) return true;
+
+  return false;
+}
+
+/**
  * Extracts a clean UPI ID / VPA from any raw string, legacy URL, or UPI URI
  */
 export function extractUpiId(input: string): string {

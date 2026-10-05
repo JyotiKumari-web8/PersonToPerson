@@ -4,8 +4,8 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { BusinessLink, LinkType } from '@/types';
 import { LINK_TYPE_CONFIG } from './linkIcons';
-import { isValidUrl, extractUpiId } from '@/lib/utils';
-import { AlertCircle, Check, ArrowUpRight, Sparkles, Smartphone } from 'lucide-react';
+import { isValidUrl } from '@/lib/utils';
+import { AlertCircle } from 'lucide-react';
 
 interface LinkModalProps {
   isOpen: boolean;
@@ -37,12 +37,11 @@ const ORDERED_PLATFORMS: { type: LinkType; label: string; shortLabel: string; sp
   { type: 'website', label: 'Website', shortLabel: 'Website' },
   { type: 'google_review', label: 'AI Google Review', shortLabel: 'AI Google Review', special: true },
   { type: 'google_maps', label: 'Google Maps', shortLabel: 'Google Maps' },
-  { type: 'upi_payment', label: 'Payment', shortLabel: 'Payment' },
   { type: 'booking', label: 'Booking', shortLabel: 'Booking' },
   { type: 'menu', label: 'Menu', shortLabel: 'Menu' },
   { type: 'portfolio', label: 'Portfolio', shortLabel: 'Portfolio' },
   { type: 'admission', label: 'Admission Form', shortLabel: 'Admission Form' },
-  { type: 'customer_repeat', label: 'Customer Repeat', shortLabel: 'Customer Repeat', special: true },
+  { type: 'customer_repeat', label: 'Repeat Customer', shortLabel: 'Repeat Customer', special: true },
   { type: 'custom', label: 'Other', shortLabel: 'Other' },
 ];
 
@@ -70,9 +69,6 @@ function detectPlatformFromUrl(inputUrl: string): { type: LinkType; defaultLabel
   }
   if (url.includes('g.page') || url.includes('writereview') || (url.includes('google.com') && url.includes('review'))) {
     return { type: 'google_review', defaultLabel: 'AI Google Review' };
-  }
-  if (url.includes('paypal.me') || url.includes('stripe.com') || url.includes('razorpay') || url.includes('cash.app')) {
-    return { type: 'payment', defaultLabel: 'Payment' };
   }
   if (url.includes('calendly.com') || url.includes('cal.com') || url.includes('booking')) {
     return { type: 'booking', defaultLabel: 'Booking' };
@@ -136,10 +132,10 @@ export const LinkModal: React.FC<LinkModalProps> = ({
       setLabel(initialLink.label);
       setIsActive(initialLink.is_active);
     } else if (initialLinkType) {
-      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === initialLinkType)?.label || 'Payment';
+      const defaultLbl = ORDERED_PLATFORMS.find((p) => p.type === initialLinkType)?.label || 'Other';
       setLinkType(initialLinkType);
       setUrl('');
-      setLabel(initialLinkType === 'upi_payment' ? 'Pay via UPI' : defaultLbl);
+      setLabel(defaultLbl);
       setIsActive(true);
     } else {
       // Find first unused platform that doesn't already have an active link
@@ -207,22 +203,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     let trimmedUrl = url.trim();
     let trimmedLabel = label.trim();
 
-    // Dedicated UPI payment validation
-    if (linkType === 'upi_payment') {
-      trimmedUrl = extractUpiId(trimmedUrl);
-      if (!trimmedUrl) {
-        setError('Please enter your UPI ID (e.g. 9934958764@ybl).');
-        return;
-      }
-      const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$/;
-      if (!upiPattern.test(trimmedUrl)) {
-        setError('Please enter a valid UPI ID (e.g. 9934958764@ybl or business@okaxis).');
-        return;
-      }
-      if (!trimmedLabel) {
-        trimmedLabel = 'Payment';
-      }
-    } else if (linkType === 'customer_repeat' || (linkType as string) === 'smart_stand') {
+    if (linkType === 'customer_repeat' || (linkType as string) === 'smart_stand') {
       // customer_repeat URL is optional — no URL validation needed
       if (!trimmedLabel) {
         setError('Please enter a label for this link.');
@@ -285,28 +266,14 @@ export const LinkModal: React.FC<LinkModalProps> = ({
     }
   };
 
-  const isDedicatedPayment =
-    initialLinkType === 'upi_payment' || initialLink?.link_type === 'upi_payment';
   const selectedPlatformCfg = ORDERED_PLATFORMS.find((p) => p.type === linkType) || ORDERED_PLATFORMS[0];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        isDedicatedPayment
-          ? initialLink
-            ? 'Edit UPI Payment'
-            : 'Configure UPI Payment'
-          : initialLink
-          ? 'Edit Link'
-          : 'Add Link'
-      }
-      description={
-        isDedicatedPayment
-          ? 'Enter your UPI ID so customers can pay directly via any UPI app.'
-          : 'Select platform, paste destination URL, and save.'
-      }
+      title={initialLink ? 'Edit Link' : 'Add Link'}
+      description="Select platform, paste destination URL, and save."
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -342,143 +309,99 @@ export const LinkModal: React.FC<LinkModalProps> = ({
           </div>
         )}
 
-        {isDedicatedPayment ? (
-          /* Simple dedicated UPI ID input field for business owner */
-          <div>
-            <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
-              UPI ID
-            </label>
-            <Input
-              placeholder="e.g. shopname@oksbi"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                setError(null);
-              }}
-              required
-              autoFocus
-              helperText="Enter your own UPI ID (e.g. shopname@oksbi or 9934958764@ybl). Direct UPI payment destination for this business."
-            />
+        {/* Step 1: Select Platform — Large, Mobile-First Touch Targets */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-2">
+            1. Select Platform
+          </label>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+            {ORDERED_PLATFORMS.map((platform) => {
+              const isSelected = linkType === platform.type;
+              const cfg = LINK_TYPE_CONFIG[platform.type] || LINK_TYPE_CONFIG.custom;
+              const isAlreadyAdded = isPlatformAlreadyUsed(platform.type);
+
+              return (
+                <button
+                  key={platform.type}
+                  type="button"
+                  disabled={isAlreadyAdded}
+                  onClick={() => !isAlreadyAdded && handleSelectPlatform(platform.type, platform.label)}
+                  className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all min-h-[48px] select-none ${
+                    isAlreadyAdded
+                      ? 'opacity-40 cursor-not-allowed border-[#2E1F15] bg-[#140D08]/60 text-[#7A6B5D]'
+                      : isSelected
+                      ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs font-bold cursor-pointer'
+                      : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/50 hover:bg-[#241810] cursor-pointer'
+                  }`}
+                >
+                  <div className="shrink-0">
+                    {cfg.icon({ className: `w-4 h-4 ${isAlreadyAdded ? 'text-[#7A6B5D]' : 'text-[#D49B5B]'}` })}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs truncate block">{platform.shortLabel}</span>
+                    {isAlreadyAdded && (
+                      <span className="text-[10px] text-[#A8988B] block font-medium">Already Added</span>
+                    )}
+                  </div>
+
+                  {isSelected && !isAlreadyAdded && (
+                    <div className="w-2 h-2 rounded-full bg-[#D49B5B] shrink-0" />
+                  )}
+                </button>
+              );
+            })}
           </div>
-        ) : (
-          <>
-            {/* Step 1: Select Platform — Large, Mobile-First Touch Targets */}
-            <div>
-              <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-2">
-                1. Select Platform
-              </label>
+        </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
-                {ORDERED_PLATFORMS.map((platform) => {
-                  const isSelected = linkType === platform.type;
-                  const cfg = LINK_TYPE_CONFIG[platform.type] || LINK_TYPE_CONFIG.custom;
-                  const isAlreadyAdded = isPlatformAlreadyUsed(platform.type);
+        {/* Step 2: Destination URL */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
+            {linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+              ? '2. Destination URL (Optional)'
+              : '2. Destination URL'}
+          </label>
+          <Input
+            placeholder={
+              linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+                ? 'https://... (optional destination URL)'
+                : linkType === 'whatsapp'
+                ? 'https://wa.me/919876543210'
+                : linkType === 'instagram'
+                ? 'https://instagram.com/yourhandle'
+                : linkType === 'facebook'
+                ? 'https://facebook.com/yourpage'
+                : linkType === 'youtube'
+                ? 'https://youtube.com/@yourchannel'
+                : linkType === 'google_review'
+                ? 'https://g.page/r/.../review'
+                : 'Paste URL here (e.g. https://...)'
+            }
+            value={url}
+            onChange={(e) => handleUrlInput(e.target.value)}
+            required={linkType !== 'customer_repeat' && (linkType as string) !== 'smart_stand'}
+            helperText={
+              linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
+                ? 'Optional custom destination link for Repeat Customer.'
+                : 'Paste destination link. URL is validated for the selected platform.'
+            }
+          />
+        </div>
 
-                  return (
-                    <button
-                      key={platform.type}
-                      type="button"
-                      disabled={isAlreadyAdded}
-                      onClick={() => !isAlreadyAdded && handleSelectPlatform(platform.type, platform.label)}
-                      className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all min-h-[48px] select-none ${
-                        isAlreadyAdded
-                          ? 'opacity-40 cursor-not-allowed border-[#2E1F15] bg-[#140D08]/60 text-[#7A6B5D]'
-                          : isSelected
-                          ? 'border-[#D49B5B] bg-[#2E1F15] text-[#FBF9F5] ring-2 ring-[#D49B5B]/30 shadow-xs font-bold cursor-pointer'
-                          : 'border-[#3D2B1F] bg-[#1B120B] text-[#DDD3CA] hover:border-[#D49B5B]/50 hover:bg-[#241810] cursor-pointer'
-                      }`}
-                    >
-                      <div className="shrink-0">
-                        {cfg.icon({ className: `w-4 h-4 ${isAlreadyAdded ? 'text-[#7A6B5D]' : 'text-[#D49B5B]'}` })}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs truncate block">{platform.shortLabel}</span>
-                        {isAlreadyAdded && (
-                          <span className="text-[10px] text-[#A8988B] block font-medium">Already Added</span>
-                        )}
-                      </div>
-
-                      {isSelected && !isAlreadyAdded && (
-                        <div className="w-2 h-2 rounded-full bg-[#D49B5B] shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* When Payment is selected: show only single UPI ID field (no URL, no button label) */}
-            {linkType === 'upi_payment' ? (
-              <div>
-                <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
-                  UPI ID
-                </label>
-                <Input
-                  placeholder="e.g. shopname@oksbi"
-                  value={url}
-                  onChange={(e) => {
-                    setUrl(e.target.value);
-                    setError(null);
-                  }}
-                  required
-                  autoFocus
-                  helperText="Enter your own UPI ID (e.g. shopname@oksbi or 9934958764@ybl). Direct UPI payment destination for this business."
-                />
-              </div>
-            ) : (
-              <>
-                {/* Step 2: Destination URL */}
-                <div>
-                  <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
-                    {linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
-                      ? '2. Destination URL (Optional)'
-                      : '2. Destination URL'}
-                  </label>
-                  <Input
-                    placeholder={
-                      linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
-                        ? 'https://... (optional destination URL)'
-                        : linkType === 'whatsapp'
-                        ? 'https://wa.me/919876543210'
-                        : linkType === 'instagram'
-                        ? 'https://instagram.com/yourhandle'
-                        : linkType === 'facebook'
-                        ? 'https://facebook.com/yourpage'
-                        : linkType === 'youtube'
-                        ? 'https://youtube.com/@yourchannel'
-                        : linkType === 'google_review'
-                        ? 'https://g.page/r/.../review'
-                        : 'Paste URL here (e.g. https://...)'
-                    }
-                    value={url}
-                    onChange={(e) => handleUrlInput(e.target.value)}
-                    required={linkType !== 'customer_repeat' && (linkType as string) !== 'smart_stand'}
-                    helperText={
-                      linkType === 'customer_repeat' || (linkType as string) === 'smart_stand'
-                        ? 'Optional custom destination link for Customer Repeat.'
-                        : 'Paste destination link. URL is validated for the selected platform.'
-                    }
-                  />
-                </div>
-
-                {/* Step 3: Button Label */}
-                <div>
-                  <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
-                    3. Button Label
-                  </label>
-                  <Input
-                    placeholder="e.g. Instagram, WhatsApp, Our Menu"
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    required
-                    helperText="Short text shown on the public tile."
-                  />
-                </div>
-              </>
-            )}
-          </>
-        )}
+        {/* Step 3: Button Label */}
+        <div>
+          <label className="block text-[11px] font-bold text-[#DDD3CA] uppercase tracking-wider mb-1.5">
+            3. Button Label
+          </label>
+          <Input
+            placeholder="e.g. Instagram, WhatsApp, Our Menu"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            required
+            helperText="Short text shown on the public tile."
+          />
+        </div>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#3D2B1F]">
@@ -493,7 +416,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             isLoading={isSubmitting}
             className="px-5 font-bold"
           >
-            {isDedicatedPayment ? 'Save UPI ID' : initialLink ? 'Save Changes' : 'Save Link'}
+            {initialLink ? 'Save Changes' : 'Save Link'}
           </Button>
         </div>
       </form>

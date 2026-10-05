@@ -339,8 +339,8 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
   },
   customer_repeat: {
     type: 'customer_repeat',
-    label: 'Customer Repeat',
-    defaultLabel: 'Customer Repeat',
+    label: 'Repeat Customer',
+    defaultLabel: 'Repeat Customer',
     defaultSubtitle: 'Drive repeat customer visits',
     placeholder: 'https://... (optional destination URL)',
     colorClass: 'text-purple-500',
@@ -349,20 +349,20 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
     icon: (props) => (
       <img
         src="/prestige-logo.png"
-        alt="Customer Repeat"
+        alt="Repeat Customer"
         className={`${props?.className || 'w-5 h-5'} object-contain`}
       />
     ),
     brandBadge: () => (
       <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shrink-0 shadow-xs p-2 overflow-hidden">
-        <img src="/prestige-logo.png" alt="Customer Repeat" className="w-6 h-6 object-contain" />
+        <img src="/prestige-logo.png" alt="Repeat Customer" className="w-6 h-6 object-contain" />
       </div>
     ),
   },
   smart_stand: {
     type: 'customer_repeat',
-    label: 'Customer Repeat',
-    defaultLabel: 'Customer Repeat',
+    label: 'Repeat Customer',
+    defaultLabel: 'Repeat Customer',
     defaultSubtitle: 'Drive repeat customer visits',
     placeholder: 'https://... (optional destination URL)',
     colorClass: 'text-purple-500',
@@ -371,13 +371,13 @@ export const LINK_TYPE_CONFIG: Record<LinkType, LinkTypeOption> = {
     icon: (props) => (
       <img
         src="/prestige-logo.png"
-        alt="Customer Repeat"
+        alt="Repeat Customer"
         className={`${props?.className || 'w-5 h-5'} object-contain`}
       />
     ),
     brandBadge: () => (
       <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shrink-0 shadow-xs p-2 overflow-hidden">
-        <img src="/prestige-logo.png" alt="Customer Repeat" className="w-6 h-6 object-contain" />
+        <img src="/prestige-logo.png" alt="Repeat Customer" className="w-6 h-6 object-contain" />
       </div>
     ),
   },

@@ -12,7 +12,7 @@ import { LinkModal } from '@/components/business/LinkModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert } from '@/components/common/Alert';
-import { Plus, Link2, AlertCircle, Smartphone, Mail } from 'lucide-react';
+import { Plus, Link2, AlertCircle, Mail } from 'lucide-react';
 
 export const LinksManager: React.FC = () => {
   const { business, isAdmin, isPlatformOwner } = useAuth();
@@ -33,7 +33,7 @@ export const LinksManager: React.FC = () => {
         linkService.getLinksByBusinessId(business.id),
         planService.getSubscriptionByBusinessId(business.id),
       ]);
-      setLinks(linksData);
+      setLinks(linksData.filter((l) => l.link_type !== 'upi_payment' && l.link_type !== 'payment'));
       setSubscription(subData);
     } catch (err) {
       console.error('Failed to load links data:', err);
@@ -49,19 +49,6 @@ export const LinksManager: React.FC = () => {
   const handleOpenAdd = () => {
     setEditingLink(null);
     setPresetLinkType(undefined);
-    setModalOpen(true);
-  };
-
-  const handleOpenPayment = () => {
-    // Check if an existing upi_payment or payment link is already configured
-    const existingPayment = links.find((l) => l.link_type === 'upi_payment' || l.link_type === 'payment');
-    if (existingPayment) {
-      setEditingLink(existingPayment);
-      setPresetLinkType(undefined);
-    } else {
-      setEditingLink(null);
-      setPresetLinkType('upi_payment');
-    }
     setModalOpen(true);
   };
 
@@ -174,19 +161,11 @@ export const LinksManager: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-[#9E8E81] mt-0.5">
-            Add website, social, payment, booking, reviews, or direct contact links. Reorder anytime.
+            Add website, social, booking, reviews, or direct contact links. Reorder anytime.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleOpenPayment}
-            icon={<Smartphone className="w-4 h-4 text-violet-400" />}
-          >
-            Payment
-          </Button>
           <Button
             variant="primary"
             size="sm"

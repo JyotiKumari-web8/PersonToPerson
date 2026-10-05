@@ -3,7 +3,7 @@ import { Business, BusinessLink, Sponsor, LinkType } from '@/types';
 import { PublicLinkCard } from './PublicLinkCard';
 import { SponsorCard } from './SponsorCard';
 import { SponsorHeader } from './SponsorHeader';
-import { getPublicBusinessUrl, copyToClipboard } from '@/lib/utils';
+import { getPublicBusinessUrl, copyToClipboard, isPaymentOrUpiLink } from '@/lib/utils';
 import { GoogleGIcon } from '@/components/business/linkIcons';
 import {
   Phone,
@@ -85,7 +85,9 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
   onSponsorClick,
 }) => {
   const [copied, setCopied] = useState(false);
-  const activeLinks = links.filter((l) => l.is_active);
+  const activeLinks = links.filter(
+    (l) => l.is_active && !isPaymentOrUpiLink(l)
+  );
   const googleReviewLink = activeLinks.find((l) => l.link_type === 'google_review');
   const customerRepeatLink = activeLinks.find(
     (l) => l.link_type === 'customer_repeat' || (l.link_type as string) === 'smart_stand'
@@ -319,7 +321,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
             </span>
           </div>
 
-          {/* 1. Special Items: AI Google Review + Customer Repeat (ALWAYS Visible) */}
+          {/* 1. Special Items: AI Google Review + Repeat Customer (ALWAYS Visible) */}
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-3">
             {/* AI Google Review */}
             {googleReviewLink ? (
@@ -353,7 +355,7 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
               </div>
             )}
 
-            {/* Customer Repeat */}
+            {/* Repeat Customer */}
             {customerRepeatLink ? (
               <a
                 href={customerRepeatLink.url || '#'}
@@ -364,23 +366,23 @@ export const PublicProfileView: React.FC<PublicProfileViewProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-[#E8DCCB]/80 bg-[#FFFDF9] hover:bg-white hover:border-[#C8924A]/70 shadow-[0_2px_8px_-2px_rgba(43,26,18,0.06)] hover:shadow-md transition-all duration-150 active:scale-95 cursor-pointer text-center min-h-[92px]"
-                title="Customer Repeat"
+                title="Repeat Customer"
               >
                 <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#241810] border border-[#3D2B1F] flex items-center justify-center shadow-2xs p-2 shrink-0 mb-1.5 transition-transform group-hover:scale-105 overflow-hidden">
-                  <img src="/prestige-logo.png" alt="Customer Repeat" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
+                  <img src="/prestige-logo.png" alt="Repeat Customer" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
                 </div>
-                <span className="font-bold text-xs text-[#2B1A12] tracking-tight">Customer Repeat</span>
+                <span className="font-bold text-xs text-[#2B1A12] tracking-tight">Repeat Customer</span>
                 <span className="text-[9.5px] font-semibold text-purple-600 mt-0.5">Active</span>
               </a>
             ) : (
               <div
                 className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-dashed border-[#E4D2BB]/70 bg-[#FAF3E7]/50 text-center min-h-[92px] opacity-60 cursor-not-allowed select-none"
-                title="Customer Repeat (Not configured)"
+                title="Repeat Customer (Not configured)"
               >
                 <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#241810]/60 border border-[#3D2B1F]/60 flex items-center justify-center shadow-2xs p-2 shrink-0 mb-1.5 grayscale opacity-75 overflow-hidden">
-                  <img src="/prestige-logo.png" alt="Customer Repeat" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
+                  <img src="/prestige-logo.png" alt="Repeat Customer" className="w-8.5 h-8.5 sm:w-9 sm:h-9 object-contain" />
                 </div>
-                <span className="font-bold text-xs text-[#705B4D] tracking-tight">Customer Repeat</span>
+                <span className="font-bold text-xs text-[#705B4D] tracking-tight">Repeat Customer</span>
                 <span className="text-[9.5px] text-[#A8988B] font-medium mt-0.5">Not Configured</span>
               </div>
             )}

@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { BusinessLink, LinkType } from '@/types';
 import { localStore } from './store';
-import { normalizeUrl } from '@/lib/utils';
+import { normalizeUrl, isPaymentOrUpiLink } from '@/lib/utils';
 import { planService } from './planService';
 import { authService } from './authService';
 
@@ -25,10 +25,11 @@ export const linkService = {
         console.error('Error fetching links:', error);
         return [];
       }
-      return (data as BusinessLink[]) || [];
+      const rawLinks = (data as BusinessLink[]) || [];
+      return rawLinks.filter((l) => !isPaymentOrUpiLink(l));
     }
 
-    const links = localStore.getLinks().filter((l) => l.business_id === businessId);
+    const links = localStore.getLinks().filter((l) => l.business_id === businessId && !isPaymentOrUpiLink(l));
     const filtered = activeOnly ? links.filter((l) => l.is_active) : links;
     return filtered.sort((a, b) => a.display_order - b.display_order);
   },

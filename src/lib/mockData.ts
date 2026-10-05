@@ -82,16 +82,6 @@ export const INITIAL_LINKS: BusinessLink[] = [
     display_order: 4,
     created_at: new Date().toISOString(),
   },
-  {
-    id: 'link-6',
-    business_id: 'biz-sample-001',
-    label: 'Sample Payment Link',
-    url: 'https://sample.persontoperson.local/payment',
-    link_type: 'payment',
-    is_active: true,
-    display_order: 5,
-    created_at: new Date().toISOString(),
-  },
 ];
 
 export const INITIAL_SPONSORS: Sponsor[] = [

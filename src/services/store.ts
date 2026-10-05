@@ -18,6 +18,7 @@ import {
   INITIAL_PLANS,
   INITIAL_SUBSCRIPTIONS,
 } from '@/lib/mockData';
+import { isPaymentOrUpiLink } from '@/lib/utils';
 
 const STORAGE_KEYS = {
   USERS: 'p2p_users',
@@ -105,14 +106,17 @@ export const localStore = {
   getLinks(): BusinessLink[] {
     const raw = localStorage.getItem(STORAGE_KEYS.LINKS);
     if (!raw) {
-      const initial = [...INITIAL_LINKS];
+      const initial = INITIAL_LINKS.filter((l) => !isPaymentOrUpiLink(l));
       localStorage.setItem(STORAGE_KEYS.LINKS, JSON.stringify(initial));
       return initial;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? (parsed as BusinessLink[]).filter((l) => !isPaymentOrUpiLink(l))
+        : INITIAL_LINKS.filter((l) => !isPaymentOrUpiLink(l));
     } catch {
-      return [...INITIAL_LINKS];
+      return INITIAL_LINKS.filter((l) => !isPaymentOrUpiLink(l));
     }
   },
 
